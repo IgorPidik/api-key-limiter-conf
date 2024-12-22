@@ -24,7 +24,7 @@ tailwind-install:
 build: tailwind-install templ-install
 	@echo "Building..."
 	@templ generate
-	@./tailwindcss -i cmd/web/assets/css/input.css -o cmd/web/assets/css/output.css
+	@./tailwindcss -i web/assets/css/input.css -o web/assets/css/output.css
 	@go build -o main cmd/api/main.go
 
 # Run the application

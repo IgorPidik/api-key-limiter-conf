@@ -1,9 +1,11 @@
 package server
 
 import (
+	"log"
 	"net/http"
 
-	"configuration-management/cmd/web"
+	"configuration-management/web"
+
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -29,6 +31,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.POST("/hello", echo.WrapHandler(http.HandlerFunc(web.HelloWebHandler)))
 
 	e.GET("/", s.HelloWorldHandler)
+	e.GET("/projects", s.projectsHandler.ListProjects)
 
 	e.GET("/health", s.healthHandler)
 
@@ -41,6 +44,15 @@ func (s *Server) HelloWorldHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, resp)
+}
+
+func (s *Server) ProjectsHandlers(c echo.Context) error {
+	projects, err := s.db.ListProjects()
+	if err != nil {
+		log.Fatalf("failed to return projects: %v\n", err)
+	}
+
+	return c.JSON(http.StatusOK, projects)
 }
 
 func (s *Server) healthHandler(c echo.Context) error {

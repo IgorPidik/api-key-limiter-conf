@@ -10,25 +10,28 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"configuration-management/internal/database"
+	"configuration-management/internal/handlers"
 )
 
 type Server struct {
 	port int
 
-	db database.Service
+	db              *database.DatabaseService
+	projectsHandler *handlers.ProjectHandler
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	db := database.New()
 	NewServer := &Server{
-		port: port,
-
-		db: database.New(),
+		port:            port,
+		projectsHandler: handlers.NewProjectHandler(db),
+		db:              db,
 	}
 
 	// Declare Server config
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
+		Addr:         fmt.Sprintf("localhost:%d", NewServer.port),
 		Handler:      NewServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,

@@ -1,0 +1,14 @@
+package projects_components
+
+import (
+	"configuration-management/internal/models"
+	"configuration-management/web"
+)
+
+templ ListProjects(projects []models.Project) {
+	@web.Base() {
+		for _, project := range projects {
+			<p>{ project.Name }</p>
+		}
+	}
+}
