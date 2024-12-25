@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -24,10 +25,32 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	component := projects_components.ListProjects(projects)
+	component := projects_components.Projects(projects)
 	renderErr := component.Render(c.Request().Context(), c.Response().Writer)
 	if renderErr != nil {
 		log.Fatalf("Error rendering in HelloWebHandler: %e", renderErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return nil
+}
+
+func (p *ProjectHandler) CreateProject(c echo.Context) error {
+	if c.Request().ParseForm() != nil {
+		return echo.NewHTTPError(http.StatusBadRequest)
+	}
+	name := c.Request().FormValue("project-name")
+
+	userId := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	project, projectErr := p.db.CreateProject(name, "access_key", userId)
+	if projectErr != nil {
+		log.Fatalf("Error creating project: %e", projectErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	component := projects_components.ProjectDetails(*project)
+	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
+		log.Fatalf("Error rendering created project: %e", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

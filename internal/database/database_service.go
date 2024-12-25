@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -97,7 +98,7 @@ func (s *DatabaseService) Close() error {
 
 func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 	query := `
-		SELECT id, name
+		SELECT id, name, access_key
 		FROM projects
 	`
 
@@ -110,7 +111,7 @@ func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 	var projects []models.Project
 	for rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ID, &project.Name); err != nil {
+		if err := rows.Scan(&project.ID, &project.Name, &project.AccessKey); err != nil {
 			return nil, fmt.Errorf("failed to scan project row: %v", err)
 		}
 
@@ -118,4 +119,18 @@ func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 	}
 
 	return projects, nil
+}
+
+func (s *DatabaseService) CreateProject(name string, accessKey string, userID uuid.UUID) (*models.Project, error) {
+	query := `
+		INSERT into projects (name, access_key, user_id) VALUES ($1, $2, $3) RETURNING id, name, access_key 
+	`
+
+	var project models.Project
+	err := s.DB.QueryRow(query, name, accessKey, userID).Scan(&project.ID, &project.Name, &project.AccessKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create project: %v", err)
+	}
+
+	return &project, nil
 }

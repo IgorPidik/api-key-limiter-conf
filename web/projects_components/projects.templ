@@ -5,39 +5,69 @@ import (
 	"configuration-management/web"
 )
 
+templ Projects(projects []models.Project) {
+	@web.Base() {
+		@CreateProject()
+		@ListProjects(projects)
+	}
+}
+
 templ ListProjects(projects []models.Project) {
 	@web.Base() {
-		for _, project := range projects {
-			<details class="collapse collapse-arrow bg-base-200">
-				<summary class="collapse-title text-xl font-medium">{ project.Name }</summary>
-				<div class="collapse-content">
-					<div role="tablist" class="tabs tabs-bordered">
-						<input
-							type="radio"
-							name="my_tabs_1"
-							role="tab"
-							class="tab"
-							aria-label="Details"
-							checked="checked"
-						/>
-						<div role="tabpanel" class="tab-content p-10">Secret key & Create new configurations</div>
-						for _, config := range project.Configs {
-							<input
-								type="radio"
-								name="my_tabs_1"
-								role="tab"
-								class="tab"
-								aria-label={ config.Name }
-							/>
-							<div role="tabpanel" class="tab-content p-10">
-								<p>{ config.ID }</p>
-								<p>{ config.HeaderName }</p>
-								<p>{ config.HeaderValue }</p>
-							</div>
-						}
-					</div>
-				</div>
-			</details>
-		}
+		<div id="projects-list">
+			for _, project := range projects {
+				@ProjectDetails(project)
+			}
+		</div>
 	}
+}
+
+templ ProjectDetails(project models.Project) {
+	<details class="collapse collapse-arrow bg-base-200">
+		<summary class="collapse-title text-xl font-medium">{ project.Name }</summary>
+		<div class="collapse-content">
+			<div role="tablist" class="tabs tabs-bordered">
+				<input
+					type="radio"
+					name="my_tabs_1"
+					role="tab"
+					class="tab"
+					aria-label="Details"
+					checked="checked"
+				/>
+				<div role="tabpanel" class="tab-content p-10">Secret key & Create new configurations</div>
+				for _, config := range project.Configs {
+					<input
+						type="radio"
+						name="my_tabs_1"
+						role="tab"
+						class="tab"
+						aria-label={ config.Name }
+					/>
+					<div role="tabpanel" class="tab-content p-10">
+						<p>{ config.ID }</p>
+						<p>{ config.HeaderName }</p>
+						<p>{ config.HeaderValue }</p>
+					</div>
+				}
+			</div>
+		</div>
+	</details>
+}
+
+templ CreateProject() {
+	<div class="card bg-base-300 rounded-box p-4">
+		<form
+			id="createProject"
+			action="/projects"
+			method="POST"
+			hx-post="/projects"
+			hx-target="#projects-list"
+			hx-swap="afterbegin"
+		>
+			<span class="mb-3">Create a new project</span>
+			<input type="text" name="project-name" placeholder="Project name" class="mb-3 input input-bordered w-full"/>
+			<button class="btn btn-primary w-full" type="submit">Create</button>
+		</form>
+	</div>
 }
