@@ -1,7 +1,8 @@
 package models
 
 type Project struct {
-	ID     string
-	Name   string
-	UserID string
+	ID      string
+	Name    string
+	UserID  string
+	Configs []Config
 }

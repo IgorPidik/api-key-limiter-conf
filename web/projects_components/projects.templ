@@ -8,7 +8,36 @@ import (
 templ ListProjects(projects []models.Project) {
 	@web.Base() {
 		for _, project := range projects {
-			<p>{ project.Name }</p>
+			<details class="collapse collapse-arrow bg-base-200">
+				<summary class="collapse-title text-xl font-medium">{ project.Name }</summary>
+				<div class="collapse-content">
+					<div role="tablist" class="tabs tabs-bordered">
+						<input
+							type="radio"
+							name="my_tabs_1"
+							role="tab"
+							class="tab"
+							aria-label="Details"
+							checked="checked"
+						/>
+						<div role="tabpanel" class="tab-content p-10">Secret key & Create new configurations</div>
+						for _, config := range project.Configs {
+							<input
+								type="radio"
+								name="my_tabs_1"
+								role="tab"
+								class="tab"
+								aria-label={ config.Name }
+							/>
+							<div role="tabpanel" class="tab-content p-10">
+								<p>{ config.ID }</p>
+								<p>{ config.HeaderName }</p>
+								<p>{ config.HeaderValue }</p>
+							</div>
+						}
+					</div>
+				</div>
+			</details>
 		}
 	}
 }
