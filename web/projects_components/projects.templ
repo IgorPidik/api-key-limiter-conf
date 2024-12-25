@@ -21,7 +21,7 @@ templ ListProjects(projects []models.Project) {
 }
 
 templ ProjectDetails(project models.Project, open bool) {
-	<details open?={ open } class="collapse collapse-arrow bg-base-200 mb-3">
+	<details open?={ open } class="collapse collapse-arrow bg-base-300 mb-3">
 		<summary class="collapse-title text-xl font-medium">{ project.Name }</summary>
 		<div class="collapse-content">
 			<div role="tablist" class="tabs tabs-bordered">
