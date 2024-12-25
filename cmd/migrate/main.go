@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err := m.Down(); err != nil {
+	if err := m.Up(); err != nil {
 		panic(err)
 	}
 

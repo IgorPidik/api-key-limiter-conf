@@ -79,4 +79,7 @@ watch:
             fi; \
         fi
 
+migrate:
+	go run cmd/migrate/main.go
+
 .PHONY: all build run test clean watch tailwind-install docker-run docker-down itest templ-install
