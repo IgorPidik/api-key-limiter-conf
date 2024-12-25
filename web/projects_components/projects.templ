@@ -62,6 +62,7 @@ templ CreateProject() {
 			hx-post="/projects"
 			hx-target="#projects-list"
 			hx-swap="afterbegin"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
 		>
 			<span>Create a new project</span>
 			<input type="text" name="project-name" placeholder="Project name" class="mt-3 mb-3 input input-bordered w-full"/>
