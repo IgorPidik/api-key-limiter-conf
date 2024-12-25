@@ -6,7 +6,6 @@ import (
 
 	"configuration-management/web"
 
-	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -27,10 +26,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	fileServer := http.FileServer(http.FS(web.Files))
 	e.GET("/assets/*", echo.WrapHandler(fileServer))
 
-	e.GET("/web", echo.WrapHandler(templ.Handler(web.HelloForm())))
-	e.POST("/hello", echo.WrapHandler(http.HandlerFunc(web.HelloWebHandler)))
-
-	e.GET("/", s.HelloWorldHandler)
 	e.GET("/projects", s.projectsHandler.ListProjects)
 	e.POST("/projects", s.projectsHandler.CreateProject)
 
