@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"configuration-management/internal/database"
+	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
 	"log"
 	"net/http"
@@ -40,9 +41,10 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 	name := c.Request().FormValue("project-name")
+	accessKey := utils.GenerateToken(126)
 
 	userId := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	project, projectErr := p.db.CreateProject(name, "access_key", userId)
+	project, projectErr := p.db.CreateProject(name, accessKey, userId)
 	if projectErr != nil {
 		log.Fatalf("Error creating project: %e", projectErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
