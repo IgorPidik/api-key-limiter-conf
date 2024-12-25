@@ -48,7 +48,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	component := projects_components.ProjectDetails(*project)
+	component := projects_components.ProjectDetails(*project, true)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 		log.Fatalf("Error rendering created project: %e", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
