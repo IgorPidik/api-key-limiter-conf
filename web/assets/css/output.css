@@ -567,6 +567,10 @@ video {
   margin-bottom: 0.75rem;
 }
 
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
 .h-screen {
   height: 100vh;
 }
