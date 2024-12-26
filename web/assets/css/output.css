@@ -571,6 +571,10 @@ video {
   margin-top: 0.75rem;
 }
 
+.flex {
+  display: flex;
+}
+
 .h-screen {
   height: 100vh;
 }
@@ -583,12 +587,24 @@ video {
   max-width: 100%;
 }
 
+.flex-col {
+  flex-direction: column;
+}
+
 .p-10 {
   padding: 2.5rem;
 }
 
 .p-4 {
   padding: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.pb-2 {
+  padding-bottom: 0.5rem;
 }
 
 .text-xl {

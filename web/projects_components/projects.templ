@@ -33,7 +33,19 @@ templ ProjectDetails(project models.Project, open bool) {
 					aria-label="Details"
 					checked="checked"
 				/>
-				<div role="tabpanel" class="tab-content p-10">Secret key & Create new configurations</div>
+				<div role="tabpanel" class="tab-content p-6 pb-2">
+					<div class="flex flex-col">
+						Secret key & Create new configurations
+						<button
+							class="btn btn-error mt-3"
+							hx-target="closest details"
+							hx-swap="outerHTML"
+							hx-delete={ "/projects/" + project.ID }
+						>
+							Delete project
+						</button>
+					</div>
+				</div>
 				for _, config := range project.Configs {
 					<input
 						type="radio"
@@ -56,9 +68,6 @@ templ ProjectDetails(project models.Project, open bool) {
 templ CreateProject() {
 	<div class="card bg-base-300 rounded-box p-4 mb-3">
 		<form
-			id="createProject"
-			action="/projects"
-			method="POST"
 			hx-post="/projects"
 			hx-target="#projects-list"
 			hx-swap="afterbegin"

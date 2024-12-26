@@ -58,3 +58,18 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 
 	return nil
 }
+
+func (p *ProjectHandler) DeleteProject(c echo.Context) error {
+	projectId, idErr := uuid.Parse(c.Param("id"))
+	if idErr != nil {
+		log.Fatalf("Invalid project id: %e", idErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
+	}
+
+	if deleteErr := p.db.DeleteProject(projectId); deleteErr != nil {
+		log.Fatalf("Failed to delete project: %e", deleteErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return nil
+}

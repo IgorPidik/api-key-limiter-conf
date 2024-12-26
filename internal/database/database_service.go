@@ -134,3 +134,15 @@ func (s *DatabaseService) CreateProject(name string, accessKey string, userID uu
 
 	return &project, nil
 }
+
+func (s *DatabaseService) DeleteProject(projectID uuid.UUID) error {
+	query := `
+		DELETE FROM projects WHERE id=$1
+	`
+	_, err := s.DB.Exec(query, projectID)
+	if err != nil {
+		return fmt.Errorf("failed to delete project: %v", err)
+	}
+
+	return nil
+}
