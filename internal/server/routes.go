@@ -29,6 +29,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.GET("/projects", s.projectsHandler.ListProjects)
 	e.POST("/projects", s.projectsHandler.CreateProject)
 	e.DELETE("/projects/:id", s.projectsHandler.DeleteProject)
+	e.POST("/projects/:id", s.projectsHandler.CreateConfig)
 
 	e.GET("/health", s.healthHandler)
 

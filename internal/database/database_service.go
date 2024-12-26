@@ -114,6 +114,12 @@ func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 		if err := rows.Scan(&project.ID, &project.Name, &project.AccessKey); err != nil {
 			return nil, fmt.Errorf("failed to scan project row: %v", err)
 		}
+		// list configs
+		configs, configsErr := s.ListConfigs(project.ID)
+		if configsErr != nil {
+			return nil, fmt.Errorf("failed to list configs for projectID: %s:  %v", project.ID.String(), configsErr)
+		}
+		project.Configs = configs
 
 		projects = append(projects, project)
 	}
@@ -123,7 +129,9 @@ func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 
 func (s *DatabaseService) CreateProject(name string, accessKey string, userID uuid.UUID) (*models.Project, error) {
 	query := `
-		INSERT into projects (name, access_key, user_id) VALUES ($1, $2, $3) RETURNING id, name, access_key 
+		INSERT into projects (name, access_key, user_id)
+		VALUES ($1, $2, $3)
+		RETURNING id, name, access_key 
 	`
 
 	var project models.Project
@@ -145,4 +153,48 @@ func (s *DatabaseService) DeleteProject(projectID uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (s *DatabaseService) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
+	query := `
+		SELECT id, name, host, header_name, header_value
+		FROM configs
+		WHERE project_id = $1
+	`
+
+	rows, err := s.DB.Query(query, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query projects: %v", err)
+	}
+	defer rows.Close()
+
+	var configs []models.Config
+	for rows.Next() {
+		var config models.Config
+		if err := rows.Scan(
+			&config.ID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan config row: %v", err)
+		}
+
+		configs = append(configs, config)
+	}
+
+	return configs, nil
+}
+
+func (s *DatabaseService) CreateConfig(projectID uuid.UUID, name string, host string, header string, value string) (*models.Config, error) {
+	query := `
+		INSERT into configs (project_id, name, host, header_name, header_value)
+		VALUES ($1, $2, $3, $4, $5) 
+		RETURNING id, name, host, header_name, header_value
+	`
+	var config models.Config
+	if err := s.DB.QueryRow(query, projectID, name, host, header, value).Scan(
+		&config.ID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+	); err != nil {
+		return nil, fmt.Errorf("failed to create config: %v", err)
+	}
+
+	return &config, nil
 }

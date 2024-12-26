@@ -73,3 +73,28 @@ func (p *ProjectHandler) DeleteProject(c echo.Context) error {
 
 	return nil
 }
+
+func (p *ProjectHandler) CreateConfig(c echo.Context) error {
+	projectID, idErr := uuid.Parse(c.Param("id"))
+	if idErr != nil {
+		log.Fatalf("Invalid project id: %e", idErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
+	}
+
+	if err := c.Request().ParseForm(); err != nil {
+		log.Fatalf("failed to parse form for creating config: %e", idErr)
+		return echo.NewHTTPError(http.StatusBadRequest)
+	}
+
+	name := c.Request().FormValue("name")
+	header := c.Request().FormValue("header-name")
+	value := c.Request().FormValue("header-value")
+	host := c.Request().FormValue("host")
+	_, configErr := p.db.CreateConfig(projectID, name, host, header, value)
+	if configErr != nil {
+		log.Fatalf("Failed to create config: %e", configErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return nil
+}

@@ -1,7 +1,9 @@
 package models
 
+import "github.com/google/uuid"
+
 type Project struct {
-	ID        string
+	ID        uuid.UUID
 	Name      string
 	UserID    string
 	AccessKey string

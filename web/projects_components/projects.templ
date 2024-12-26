@@ -3,6 +3,8 @@ package projects_components
 import (
 	"configuration-management/internal/models"
 	"configuration-management/web"
+	"fmt"
+	"strings"
 )
 
 templ Projects(projects []models.Project) {
@@ -27,7 +29,7 @@ templ ProjectDetails(project models.Project, open bool) {
 			<div role="tablist" class="tabs tabs-bordered">
 				<input
 					type="radio"
-					name={ "my_tabs_" + project.ID }
+					name={ "my_tabs_" + project.ID.String() }
 					role="tab"
 					class="tab"
 					aria-label="Details"
@@ -36,20 +38,23 @@ templ ProjectDetails(project models.Project, open bool) {
 				<div role="tabpanel" class="tab-content p-6 pb-2">
 					<div class="flex flex-col">
 						Secret key & Create new configurations
-						<button
-							class="btn btn-error mt-3"
-							hx-target="closest details"
-							hx-swap="outerHTML"
-							hx-delete={ "/projects/" + project.ID }
-						>
-							Delete project
-						</button>
+						<div class="flex flex-row mt-3">
+							@CreateConfiguration(project)
+							<button
+								class="btn btn-error flex-1 ml-2"
+								hx-target="closest details"
+								hx-swap="outerHTML"
+								hx-delete={ "/projects/" + project.ID.String() }
+							>
+								Delete project
+							</button>
+						</div>
 					</div>
 				</div>
 				for _, config := range project.Configs {
 					<input
 						type="radio"
-						name={ "my_tabs_" + project.ID }
+						name={ "my_tabs_" + project.ID.String() }
 						role="tab"
 						class="tab"
 						aria-label={ config.Name }
@@ -78,4 +83,28 @@ templ CreateProject() {
 			<button class="btn btn-primary w-full" type="submit">Create</button>
 		</form>
 	</div>
+}
+
+templ CreateConfiguration(project models.Project) {
+	<dialog id={ "create_config_modal_" + strings.Replace(project.ID.String(), "-", "", -1) } class="modal">
+		<div class="modal-box">
+			<form method="dialog">
+				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+			</form>
+			<h3 class="text-lg font-bold">Create a new configuration</h3>
+			<form method="post" action="/" hx-post={ "/projects/" + project.ID.String() }>
+				<input type="text" name="name" placeholder="Configuration name" class="input input-bordered mt-3 w-full"/>
+				<input type="text" name="host" placeholder="Host" class="input input-bordered mt-3 w-full"/>
+				<input type="text" name="header-name" placeholder="Header name" class="input input-bordered mt-3 w-full"/>
+				<input type="text" name="header-value" placeholder="Header value" class="input input-bordered mt-3 mb-3 w-full"/>
+				<button type="submit" class="btn btn-primary w-full">Create</button>
+			</form>
+		</div>
+	</dialog>
+	<button
+		class="btn btn-primary flex-1 mr-2"
+		{ templ.Attributes{"hx-on:click": fmt.Sprintf("create_config_modal_%s.showModal()", strings.Replace(project.ID.String(), "-", "", -1))}... }
+	>
+		Create configuration
+	</button>
 }
