@@ -90,9 +90,15 @@ func (p *ProjectHandler) CreateConfig(c echo.Context) error {
 	header := c.Request().FormValue("header-name")
 	value := c.Request().FormValue("header-value")
 	host := c.Request().FormValue("host")
-	_, configErr := p.db.CreateConfig(projectID, name, host, header, value)
+	config, configErr := p.db.CreateConfig(projectID, name, host, header, value)
 	if configErr != nil {
 		log.Fatalf("Failed to create config: %e", configErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	component := projects_components.ConfigDetails(projectID, *config)
+	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
+		log.Fatalf("Error rendering created config: %e", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"configuration-management/internal/models"
 	"configuration-management/web"
 	"fmt"
+	"github.com/google/uuid"
 	"strings"
 )
 
@@ -26,7 +27,7 @@ templ ProjectDetails(project models.Project, open bool) {
 	<details open?={ open } class="collapse collapse-arrow bg-base-300 mb-3">
 		<summary class="collapse-title text-xl font-medium">{ project.Name }</summary>
 		<div class="collapse-content">
-			<div role="tablist" class="tabs tabs-bordered">
+			<div id={ "tabs_" + project.ID.String() } role="tablist" class="tabs tabs-bordered">
 				<input
 					type="radio"
 					name={ "my_tabs_" + project.ID.String() }
@@ -39,7 +40,7 @@ templ ProjectDetails(project models.Project, open bool) {
 					<div class="flex flex-col">
 						Secret key & Create new configurations
 						<div class="flex flex-row mt-3">
-							@CreateConfiguration(project)
+							@CreateConfig(project)
 							<button
 								class="btn btn-error flex-1 ml-2"
 								hx-target="closest details"
@@ -52,18 +53,7 @@ templ ProjectDetails(project models.Project, open bool) {
 					</div>
 				</div>
 				for _, config := range project.Configs {
-					<input
-						type="radio"
-						name={ "my_tabs_" + project.ID.String() }
-						role="tab"
-						class="tab"
-						aria-label={ config.Name }
-					/>
-					<div role="tabpanel" class="tab-content p-10">
-						<p>{ config.ID }</p>
-						<p>{ config.HeaderName }</p>
-						<p>{ config.HeaderValue }</p>
-					</div>
+					@ConfigDetails(project.ID, config)
 				}
 			</div>
 		</div>
@@ -85,14 +75,47 @@ templ CreateProject() {
 	</div>
 }
 
-templ CreateConfiguration(project models.Project) {
-	<dialog id={ "create_config_modal_" + strings.Replace(project.ID.String(), "-", "", -1) } class="modal">
+templ ConfigDetails(projectID uuid.UUID, config models.Config) {
+	<input
+		type="radio"
+		name={ "my_tabs_" + projectID.String() }
+		role="tab"
+		class="tab"
+		aria-label={ config.Name }
+	/>
+	<div role="tabpanel" class="tab-content p-10">
+		<p>{ config.ID.String() }</p>
+		<p>{ config.HeaderName }</p>
+		<p>{ config.HeaderValue }</p>
+	</div>
+}
+
+func getModalId(projectID uuid.UUID) string {
+	return "create_config_modal_" + strings.Replace(projectID.String(), "-", "", -1)
+}
+
+func getModalFormId(projectID uuid.UUID) string {
+	return "close_modal_" + strings.Replace(projectID.String(), "-", "", -1)
+}
+
+templ CreateConfig(project models.Project) {
+	<dialog id={ getModalId(project.ID) } class="modal">
 		<div class="modal-box">
-			<form method="dialog">
+			<form
+				method="dialog"
+				id={ getModalFormId(project.ID) }
+			>
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 			</form>
 			<h3 class="text-lg font-bold">Create a new configuration</h3>
-			<form method="post" action="/" hx-post={ "/projects/" + project.ID.String() }>
+			<form
+				method="post"
+				action="/"
+				hx-post={ "/projects/" + project.ID.String() }
+				hx-target={ "#tabs_" + project.ID.String() }
+				hx-swap="beforeend"
+				{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", getModalFormId(project.ID))}... }
+			>
 				<input type="text" name="name" placeholder="Configuration name" class="input input-bordered mt-3 w-full"/>
 				<input type="text" name="host" placeholder="Host" class="input input-bordered mt-3 w-full"/>
 				<input type="text" name="header-name" placeholder="Header name" class="input input-bordered mt-3 w-full"/>
@@ -103,7 +126,7 @@ templ CreateConfiguration(project models.Project) {
 	</dialog>
 	<button
 		class="btn btn-primary flex-1 mr-2"
-		{ templ.Attributes{"hx-on:click": fmt.Sprintf("create_config_modal_%s.showModal()", strings.Replace(project.ID.String(), "-", "", -1))}... }
+		{ templ.Attributes{"hx-on:click": fmt.Sprintf("%s.showModal()", getModalId(project.ID))}... }
 	>
 		Create configuration
 	</button>

@@ -1,7 +1,9 @@
 package models
 
+import "github.com/google/uuid"
+
 type Config struct {
-	ID          string
+	ID          uuid.UUID
 	ProjectID   string
 	Name        string
 	Host        string
