@@ -595,6 +595,10 @@ video {
   display: flex;
 }
 
+.grid {
+  display: grid;
+}
+
 .h-screen {
   height: 100vh;
 }
@@ -603,12 +607,20 @@ video {
   width: 100%;
 }
 
-.max-w-full {
-  max-width: 100%;
+.max-w-\[50\%\] {
+  max-width: 50%;
+}
+
+.max-w-\[75\%\] {
+  max-width: 75%;
 }
 
 .flex-1 {
   flex: 1 1 0%;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .flex-row {
@@ -619,8 +631,8 @@ video {
   flex-direction: column;
 }
 
-.p-10 {
-  padding: 2.5rem;
+.justify-end {
+  justify-content: flex-end;
 }
 
 .p-4 {

@@ -14,20 +14,28 @@ templ ConfigDetails(config models.Config) {
 		class="tab"
 		aria-label={ config.Name }
 	/>
-	<div role="tabpanel" class="tab-content p-10">
-		<p>{ config.ID.String() }</p>
-		<p>{ config.ProjectID.String() }</p>
-		<p>{ config.HeaderName }</p>
-		<p>{ config.HeaderValue }</p>
-		<button
-			class="btn btn-error flex-1 ml-2"
-			hx-target={ "#config_tabs_" + config.ID.String() }
-			hx-swap="outerHTML"
-			hx-delete={ "/projects/" + config.ProjectID.String() + "/configs/" + config.ID.String() }
-			{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("%s.checked = true", GetDetailsTabID(config.ProjectID))}... }
-		>
-			Delete config
-		</button>
+	<div role="tabpanel" class="tab-content p-6 pb-2">
+		<div class="grid grid-cols-2">
+			<span class="font-bold">Config ID</span>
+			<span>{ config.ID.String() }</span>
+			<span class="font-bold">Host</span>
+			<span>{ config.Host }</span>
+			<span class="font-bold">Header name</span>
+			<span>{ config.HeaderName }</span>
+			<span class="font-bold">Header value</span>
+			<span>{ config.HeaderValue }</span>
+		</div>
+		<div class="mt-3 flex justify-end">
+			<button
+				class="btn btn-error flex-1 max-w-[50%]"
+				hx-target={ "#config_tabs_" + config.ID.String() }
+				hx-swap="outerHTML"
+				hx-delete={ "/projects/" + config.ProjectID.String() + "/configs/" + config.ID.String() }
+				{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("%s.checked = true", GetDetailsTabID(config.ProjectID))}... }
+			>
+				Delete config
+			</button>
+		</div>
 	</div>
 }
 
