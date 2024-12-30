@@ -3,39 +3,40 @@ package projects_components
 import (
 	"configuration-management/internal/models"
 	"fmt"
-	"github.com/google/uuid"
-	"strings"
 )
 
-templ ConfigDetails(projectID uuid.UUID, config models.Config) {
+templ ConfigDetails(config models.Config) {
 	<input
 		type="radio"
-		name={ "my_tabs_" + projectID.String() }
+		id={ "config_tabs_" + config.ID.String() }
+		name={ "config_tabs_" + config.ProjectID.String() }
 		role="tab"
 		class="tab"
 		aria-label={ config.Name }
 	/>
 	<div role="tabpanel" class="tab-content p-10">
 		<p>{ config.ID.String() }</p>
+		<p>{ config.ProjectID.String() }</p>
 		<p>{ config.HeaderName }</p>
 		<p>{ config.HeaderValue }</p>
+		<button
+			class="btn btn-error flex-1 ml-2"
+			hx-target={ "#config_tabs_" + config.ID.String() }
+			hx-swap="outerHTML"
+			hx-delete={ "/projects/" + config.ProjectID.String() + "/configs/" + config.ID.String() }
+			{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("%s.checked = true", GetDetailsTabID(config.ProjectID))}... }
+		>
+			Delete config
+		</button>
 	</div>
 }
 
-func getModalId(projectID uuid.UUID) string {
-	return "create_config_modal_" + strings.Replace(projectID.String(), "-", "", -1)
-}
-
-func getModalFormId(projectID uuid.UUID) string {
-	return "close_modal_" + strings.Replace(projectID.String(), "-", "", -1)
-}
-
 templ CreateConfig(project models.Project) {
-	<dialog id={ getModalId(project.ID) } class="modal">
+	<dialog id={ GetModalId(project.ID) } class="modal">
 		<div class="modal-box">
 			<form
 				method="dialog"
-				id={ getModalFormId(project.ID) }
+				id={ GetModalFormId(project.ID) }
 			>
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 			</form>
@@ -46,7 +47,7 @@ templ CreateConfig(project models.Project) {
 				hx-post={ "/projects/" + project.ID.String() }
 				hx-target={ "#tabs_" + project.ID.String() }
 				hx-swap="beforeend"
-				{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", getModalFormId(project.ID))}... }
+				{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", GetModalFormId(project.ID))}... }
 			>
 				<input type="text" name="name" placeholder="Configuration name" class="input input-bordered mt-3 w-full"/>
 				<input type="text" name="host" placeholder="Host" class="input input-bordered mt-3 w-full"/>
@@ -58,7 +59,7 @@ templ CreateConfig(project models.Project) {
 	</dialog>
 	<button
 		class="btn btn-primary flex-1 mr-2"
-		{ templ.Attributes{"hx-on:click": fmt.Sprintf("%s.showModal()", getModalId(project.ID))}... }
+		{ templ.Attributes{"hx-on:click": fmt.Sprintf("%s.showModal()", GetModalId(project.ID))}... }
 	>
 		Create configuration
 	</button>

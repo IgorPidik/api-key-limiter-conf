@@ -96,9 +96,30 @@ func (p *ProjectHandler) CreateConfig(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	component := projects_components.ConfigDetails(projectID, *config)
+	component := projects_components.ConfigDetails(*config)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 		log.Fatalf("Error rendering created config: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return nil
+}
+
+func (p *ProjectHandler) DeleteConfig(c echo.Context) error {
+	projectID, projectIDErr := uuid.Parse(c.Param("id"))
+	if projectIDErr != nil {
+		log.Fatalf("Invalid project id: %e", projectIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
+	}
+
+	configID, configIDErr := uuid.Parse(c.Param("configId"))
+	if configIDErr != nil {
+		log.Fatalf("Invalid config id: %e", configIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
+	}
+
+	if deleteErr := p.db.DeleteConfig(projectID, configID); deleteErr != nil {
+		log.Fatalf("Failed to delete config: %e", deleteErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

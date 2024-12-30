@@ -157,7 +157,7 @@ func (s *DatabaseService) DeleteProject(projectID uuid.UUID) error {
 
 func (s *DatabaseService) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
 	query := `
-		SELECT id, name, host, header_name, header_value
+		SELECT id, project_id, name, host, header_name, header_value
 		FROM configs
 		WHERE project_id = $1
 	`
@@ -172,7 +172,7 @@ func (s *DatabaseService) ListConfigs(projectID uuid.UUID) ([]models.Config, err
 	for rows.Next() {
 		var config models.Config
 		if err := rows.Scan(
-			&config.ID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+			&config.ID, &config.ProjectID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan config row: %v", err)
 		}
@@ -187,14 +187,26 @@ func (s *DatabaseService) CreateConfig(projectID uuid.UUID, name string, host st
 	query := `
 		INSERT into configs (project_id, name, host, header_name, header_value)
 		VALUES ($1, $2, $3, $4, $5) 
-		RETURNING id, name, host, header_name, header_value
+		RETURNING id, project_id, name, host, header_name, header_value
 	`
 	var config models.Config
 	if err := s.DB.QueryRow(query, projectID, name, host, header, value).Scan(
-		&config.ID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+		&config.ID, &config.ProjectID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
 	); err != nil {
 		return nil, fmt.Errorf("failed to create config: %v", err)
 	}
 
 	return &config, nil
+}
+
+func (s *DatabaseService) DeleteConfig(projectID uuid.UUID, configID uuid.UUID) error {
+	query := `
+		DELETE FROM configs WHERE id=$1 AND project_id = $2
+	`
+	_, err := s.DB.Exec(query, configID, projectID)
+	if err != nil {
+		return fmt.Errorf("failed to delete project: %v", err)
+	}
+
+	return nil
 }

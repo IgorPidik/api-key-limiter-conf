@@ -27,7 +27,8 @@ templ ProjectDetails(project models.Project, open bool) {
 			<div id={ "tabs_" + project.ID.String() } role="tablist" class="tabs tabs-bordered">
 				<input
 					type="radio"
-					name={ "my_tabs_" + project.ID.String() }
+					id={ GetDetailsTabID(project.ID) }
+					name={ "config_tabs_" + project.ID.String() }
 					role="tab"
 					class="tab"
 					aria-label="Details"
@@ -50,7 +51,7 @@ templ ProjectDetails(project models.Project, open bool) {
 					</div>
 				</div>
 				for _, config := range project.Configs {
-					@ConfigDetails(project.ID, config)
+					@ConfigDetails(config)
 				}
 			</div>
 		</div>
