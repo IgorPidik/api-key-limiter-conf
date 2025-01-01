@@ -13,8 +13,12 @@ require (
 
 require (
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.19.0 // indirect
@@ -38,6 +42,8 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/go-playground/form/v4 v4.2.1
+	github.com/go-playground/validator/v10 v10.23.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/google/uuid v1.6.0 // indirect

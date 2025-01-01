@@ -2,21 +2,32 @@ package handlers
 
 import (
 	"configuration-management/internal/database"
+	"configuration-management/internal/forms"
 	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/go-playground/form/v4"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
+type CreateProjectForm struct {
+	Name string `form:"project-name" validate:"required" json:"name"`
+}
+
 type ProjectHandler struct {
-	db *database.DatabaseService
+	db       *database.DatabaseService
+	decoder  *form.Decoder
+	validate *validator.Validate
 }
 
 func NewProjectHandler(db *database.DatabaseService) *ProjectHandler {
-	return &ProjectHandler{db}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	return &ProjectHandler{db, form.NewDecoder(), validate}
 }
 
 func (p *ProjectHandler) ListProjects(c echo.Context) error {
@@ -29,7 +40,7 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 	component := projects_components.Projects(projects)
 	renderErr := component.Render(c.Request().Context(), c.Response().Writer)
 	if renderErr != nil {
-		log.Fatalf("Error rendering in HelloWebHandler: %e", renderErr)
+		log.Fatalf("Error rendering in ListProjects: %e", renderErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
@@ -40,11 +51,34 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	if c.Request().ParseForm() != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
-	name := c.Request().FormValue("project-name")
+	var createProjectForm CreateProjectForm
+	if err := p.decoder.Decode(&createProjectForm, c.Request().Form); err != nil {
+		log.Fatalf("Error decoding CreateProjectForm: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	if validationErr := p.validate.Struct(createProjectForm); validationErr != nil {
+		errors := make(forms.FormErrors)
+		for _, err := range validationErr.(validator.ValidationErrors) {
+			errors[err.Field()] = fmt.Sprintf("invalid value: %s", err.Tag())
+		}
+
+		log.Printf("errs: %#v\n", errors)
+		c.Response().Header().Set("HX-Reswap", "outerHTML")
+		c.Response().Header().Set("HX-Retarget", "#create-project-form")
+		component := projects_components.CreateProject(errors)
+		if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
+			log.Fatalf("Error rendering created project: %e", err)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+		c.Response().WriteHeader(http.StatusBadRequest)
+		return nil
+	}
+
 	accessKey := utils.GenerateToken(126)
 
 	userId := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	project, projectErr := p.db.CreateProject(name, accessKey, userId)
+	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, userId)
 	if projectErr != nil {
 		log.Fatalf("Error creating project: %e", projectErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
