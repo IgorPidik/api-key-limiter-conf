@@ -99,7 +99,7 @@ func (s *DatabaseService) Close() error {
 func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 	query := `
 		SELECT id, name, access_key
-		FROM projects
+		FROM projects ORDER BY timestamp DESC
 	`
 
 	rows, err := s.DB.Query(query)
