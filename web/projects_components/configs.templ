@@ -1,8 +1,10 @@
 package projects_components
 
 import (
+	"configuration-management/internal/forms"
 	"configuration-management/internal/models"
 	"fmt"
+	"github.com/google/uuid"
 )
 
 templ ConfigDetails(config models.Config) {
@@ -18,8 +20,8 @@ templ ConfigDetails(config models.Config) {
 		<div class="grid grid-cols-2">
 			<span class="font-bold">Config ID</span>
 			<span>{ config.ID.String() }</span>
-			<span class="font-bold">Host</span>
-			<span>{ config.Host }</span>
+			<!-- <span class="font-bold">Host</span> -->
+			<!-- <span>{ config.Host }</span> -->
 			<span class="font-bold">Header name</span>
 			<span>{ config.HeaderName }</span>
 			<span class="font-bold">Header value</span>
@@ -39,6 +41,32 @@ templ ConfigDetails(config models.Config) {
 	</div>
 }
 
+templ CreateConfigForm(projectID uuid.UUID, errors forms.FormErrors) {
+	<form
+		id={ GetCreateConfigFormID(projectID) }
+		method="post"
+		action="/"
+		hx-post={ "/projects/" + projectID.String() }
+		hx-target={ "#tabs_" + projectID.String() }
+		hx-swap="beforeend"
+		{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", GetModalFormId(projectID))}... }
+	>
+		<input type="text" name="name" placeholder="Configuration name" required class={ GetInputClass("Name", errors, "mt-3") }/>
+		if err, ok := errors["Name"]; ok {
+			<small class="text-red-400">{ err }</small>
+		}
+		<input type="text" name="header-name" placeholder="Header name" required class={ GetInputClass("HeaderName", errors, "mt-3") }/>
+		if err, ok := errors["HeaderName"]; ok {
+			<small class="text-red-400">{ err }</small>
+		}
+		<input type="text" name="header-value" placeholder="Header value" required class={ GetInputClass("HeaderValue", errors, "mt-3") }/>
+		if err, ok := errors["HeaderValue"]; ok {
+			<small class="text-red-400">{ err }</small>
+		}
+		<button type="submit" class="btn btn-primary w-full mt-3">Create</button>
+	</form>
+}
+
 templ CreateConfig(project models.Project) {
 	<dialog id={ GetModalId(project.ID) } class="modal">
 		<div class="modal-box">
@@ -49,20 +77,7 @@ templ CreateConfig(project models.Project) {
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 			</form>
 			<h3 class="text-lg font-bold">Create a new configuration</h3>
-			<form
-				method="post"
-				action="/"
-				hx-post={ "/projects/" + project.ID.String() }
-				hx-target={ "#tabs_" + project.ID.String() }
-				hx-swap="beforeend"
-				{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", GetModalFormId(project.ID))}... }
-			>
-				<input type="text" name="name" placeholder="Configuration name" class="input input-bordered mt-3 w-full"/>
-				<input type="text" name="host" placeholder="Host" class="input input-bordered mt-3 w-full"/>
-				<input type="text" name="header-name" placeholder="Header name" class="input input-bordered mt-3 w-full"/>
-				<input type="text" name="header-value" placeholder="Header value" class="input input-bordered mt-3 mb-3 w-full"/>
-				<button type="submit" class="btn btn-primary w-full">Create</button>
-			</form>
+			@CreateConfigForm(project.ID, nil)
 		</div>
 	</dialog>
 	<button

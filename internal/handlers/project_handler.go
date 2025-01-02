@@ -15,7 +15,13 @@ import (
 )
 
 type CreateProjectForm struct {
-	Name string `form:"project-name" validate:"required" json:"name"`
+	Name string `form:"project-name" validate:"required"`
+}
+
+type CreateConfigForm struct {
+	Name        string `form:"name" validate:"required"`
+	HeaderName  string `form:"header-name" validate:"required"`
+	HeaderValue string `form:"header-value" validate:"required"`
 }
 
 type ProjectHandler struct {
@@ -62,7 +68,6 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 			errors[err.Field()] = err.Tag()
 		}
 
-		log.Printf("errs: %#v\n", errors)
 		c.Response().Header().Set("HX-Reswap", "outerHTML")
 		c.Response().Header().Set("HX-Retarget", "#create-project-form")
 		component := projects_components.CreateProject(errors)
@@ -114,16 +119,35 @@ func (p *ProjectHandler) CreateConfig(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
 	}
 
-	if err := c.Request().ParseForm(); err != nil {
-		log.Fatalf("failed to parse form for creating config: %e", idErr)
+	if c.Request().ParseForm() != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
+	var createConfigForm CreateConfigForm
+	if err := p.decoder.Decode(&createConfigForm, c.Request().Form); err != nil {
+		log.Fatalf("Error decoding CreateConfigForm: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
 
-	name := c.Request().FormValue("name")
-	header := c.Request().FormValue("header-name")
-	value := c.Request().FormValue("header-value")
-	host := c.Request().FormValue("host")
-	config, configErr := p.db.CreateConfig(projectID, name, host, header, value)
+	if validationErr := p.validate.Struct(createConfigForm); validationErr != nil {
+		errors := make(forms.FormErrors)
+		for _, err := range validationErr.(validator.ValidationErrors) {
+			errors[err.Field()] = err.Tag()
+		}
+
+		c.Response().Header().Set("HX-Reswap", "outerHTML")
+		c.Response().Header().Set("HX-Retarget", "#"+projects_components.GetCreateConfigFormID(projectID))
+		component := projects_components.CreateConfigForm(projectID, errors)
+		if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
+			log.Fatalf("Error rendering created config: %e", err)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+		c.Response().WriteHeader(http.StatusBadRequest)
+		return nil
+	}
+
+	config, configErr := p.db.CreateConfig(
+		projectID, createConfigForm.Name, "", createConfigForm.HeaderName, createConfigForm.HeaderValue,
+	)
 	if configErr != nil {
 		log.Fatalf("Failed to create config: %e", configErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)

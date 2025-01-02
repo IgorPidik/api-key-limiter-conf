@@ -18,10 +18,18 @@ func GetDetailsTabID(projectID uuid.UUID) string {
 	return "details_tab_" + strings.Replace(projectID.String(), "-", "", -1)
 }
 
-func GetInputClass(fieldName string, errors forms.FormErrors) string {
+func GetCreateConfigFormID(projectID uuid.UUID) string {
+	return "create_config_form" + strings.Replace(projectID.String(), "-", "", -1)
+}
+
+func GetInputClass(fieldName string, errors forms.FormErrors, additionalClasses string) string {
 	classes := "input input-bordered w-full"
 	if _, ok := errors[fieldName]; ok {
 		classes += " input-error"
+	}
+
+	if additionalClasses != "" {
+		classes += " " + additionalClasses
 	}
 
 	return classes
