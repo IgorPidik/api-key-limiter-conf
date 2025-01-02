@@ -25,12 +25,12 @@ type CreateConfigForm struct {
 }
 
 type ProjectHandler struct {
-	db       *database.DatabaseService
+	db       *database.DatabaseHandler
 	decoder  *form.Decoder
 	validate *validator.Validate
 }
 
-func NewProjectHandler(db *database.DatabaseService) *ProjectHandler {
+func NewProjectHandler(db *database.DatabaseHandler) *ProjectHandler {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	return &ProjectHandler{db, form.NewDecoder(), validate}
 }

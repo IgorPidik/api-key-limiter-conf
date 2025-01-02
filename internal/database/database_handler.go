@@ -15,7 +15,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-type DatabaseService struct {
+type DatabaseHandler struct {
 	DB *sql.DB
 }
 
@@ -26,10 +26,10 @@ var (
 	port       = os.Getenv("DB_PORT")
 	host       = os.Getenv("DB_HOST")
 	schema     = os.Getenv("DB_SCHEMA")
-	dbInstance *DatabaseService
+	dbInstance *DatabaseHandler
 )
 
-func New() *DatabaseService {
+func New() *DatabaseHandler {
 	// Reuse Connection
 	if dbInstance != nil {
 		return dbInstance
@@ -39,13 +39,13 @@ func New() *DatabaseService {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dbInstance = &DatabaseService{
+	dbInstance = &DatabaseHandler{
 		DB: db,
 	}
 	return dbInstance
 }
 
-func (s *DatabaseService) Health() map[string]string {
+func (s *DatabaseHandler) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
@@ -91,12 +91,12 @@ func (s *DatabaseService) Health() map[string]string {
 	return stats
 }
 
-func (s *DatabaseService) Close() error {
+func (s *DatabaseHandler) Close() error {
 	log.Printf("Disconnected from database: %s", database)
 	return s.DB.Close()
 }
 
-func (s *DatabaseService) ListProjects() ([]models.Project, error) {
+func (s *DatabaseHandler) ListProjects() ([]models.Project, error) {
 	query := `
 		SELECT id, name, access_key
 		FROM projects ORDER BY timestamp DESC
@@ -127,7 +127,7 @@ func (s *DatabaseService) ListProjects() ([]models.Project, error) {
 	return projects, nil
 }
 
-func (s *DatabaseService) CreateProject(name string, accessKey string, userID uuid.UUID) (*models.Project, error) {
+func (s *DatabaseHandler) CreateProject(name string, accessKey string, userID uuid.UUID) (*models.Project, error) {
 	query := `
 		INSERT into projects (name, access_key, user_id)
 		VALUES ($1, $2, $3)
@@ -143,7 +143,7 @@ func (s *DatabaseService) CreateProject(name string, accessKey string, userID uu
 	return &project, nil
 }
 
-func (s *DatabaseService) DeleteProject(projectID uuid.UUID) error {
+func (s *DatabaseHandler) DeleteProject(projectID uuid.UUID) error {
 	query := `
 		DELETE FROM projects WHERE id=$1
 	`
@@ -155,7 +155,7 @@ func (s *DatabaseService) DeleteProject(projectID uuid.UUID) error {
 	return nil
 }
 
-func (s *DatabaseService) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
+func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
 	query := `
 		SELECT id, project_id, name, host, header_name, header_value
 		FROM configs
@@ -183,7 +183,7 @@ func (s *DatabaseService) ListConfigs(projectID uuid.UUID) ([]models.Config, err
 	return configs, nil
 }
 
-func (s *DatabaseService) CreateConfig(projectID uuid.UUID, name string, host string, header string, value string) (*models.Config, error) {
+func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string, host string, header string, value string) (*models.Config, error) {
 	query := `
 		INSERT into configs (project_id, name, host, header_name, header_value)
 		VALUES ($1, $2, $3, $4, $5) 
@@ -199,7 +199,7 @@ func (s *DatabaseService) CreateConfig(projectID uuid.UUID, name string, host st
 	return &config, nil
 }
 
-func (s *DatabaseService) DeleteConfig(projectID uuid.UUID, configID uuid.UUID) error {
+func (s *DatabaseHandler) DeleteConfig(projectID uuid.UUID, configID uuid.UUID) error {
 	query := `
 		DELETE FROM configs WHERE id=$1 AND project_id = $2
 	`

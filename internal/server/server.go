@@ -16,7 +16,7 @@ import (
 type Server struct {
 	port int
 
-	db              *database.DatabaseService
+	db              *database.DatabaseHandler
 	projectsHandler *handlers.ProjectHandler
 }
 
