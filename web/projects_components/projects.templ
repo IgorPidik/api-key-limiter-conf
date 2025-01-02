@@ -68,8 +68,12 @@ templ CreateProject(errors forms.FormErrors) {
 			hx-on::after-request="if(event.detail.successful) this.reset()"
 		>
 			<span>Create a new project</span>
-			<input type="text" name="project-name" placeholder="Project name" class="mt-3 mb-3 input input-bordered w-full"/>
-			<p>{ errors["Name"] }</p>
+			<div class="mt-3 mb-3">
+				<input type="text" name="project-name" placeholder="Project name" class={ GetInputClass("Name", errors) }/>
+				if err, ok := errors["Name"]; ok {
+					<small class="text-red-400">{ err }</small>
+				}
+			</div>
 			<button class="btn btn-primary w-full" type="submit">Create</button>
 		</form>
 	</div>

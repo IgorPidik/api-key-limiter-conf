@@ -5,7 +5,6 @@ import (
 	"configuration-management/internal/forms"
 	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -60,7 +59,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 	if validationErr := p.validate.Struct(createProjectForm); validationErr != nil {
 		errors := make(forms.FormErrors)
 		for _, err := range validationErr.(validator.ValidationErrors) {
-			errors[err.Field()] = fmt.Sprintf("invalid value: %s", err.Tag())
+			errors[err.Field()] = err.Tag()
 		}
 
 		log.Printf("errs: %#v\n", errors)
