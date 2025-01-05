@@ -183,15 +183,16 @@ func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, err
 	return configs, nil
 }
 
-func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string, host string, header string, value string) (*models.Config, error) {
+func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string, host string, header string, value string, numberOfRequests int, per string) (*models.Config, error) {
 	query := `
-		INSERT into configs (project_id, name, host, header_name, header_value)
-		VALUES ($1, $2, $3, $4, $5) 
-		RETURNING id, project_id, name, host, header_name, header_value
+		INSERT into configs (project_id, name, host, header_name, header_value, limit_requests_count, limit_duration)
+		VALUES ($1, $2, $3, $4, $5, $6, $7) 
+		RETURNING id, project_id, name, host, header_name, header_value, limit_requests_count, limit_duration
 	`
 	var config models.Config
-	if err := s.DB.QueryRow(query, projectID, name, host, header, value).Scan(
+	if err := s.DB.QueryRow(query, projectID, name, host, header, value, numberOfRequests, per).Scan(
 		&config.ID, &config.ProjectID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+		&config.LimitNumberOfRequests, &config.LimitPer,
 	); err != nil {
 		return nil, fmt.Errorf("failed to create config: %v", err)
 	}

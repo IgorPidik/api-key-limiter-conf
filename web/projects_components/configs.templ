@@ -5,6 +5,7 @@ import (
 	"configuration-management/internal/models"
 	"fmt"
 	"github.com/google/uuid"
+	"strconv"
 )
 
 templ ConfigDetails(config models.Config) {
@@ -26,6 +27,10 @@ templ ConfigDetails(config models.Config) {
 			<span>{ config.HeaderName }</span>
 			<span class="font-bold">Header value</span>
 			<span>{ config.HeaderValue }</span>
+			<span class="font-bold">Limit number of requests</span>
+			<span>{ strconv.Itoa(config.LimitNumberOfRequests) }</span>
+			<span class="font-bold">Limit per</span>
+			<span>{ config.LimitPer }</span>
 		</div>
 		<div class="mt-3 flex justify-end">
 			<button
@@ -51,18 +56,38 @@ templ CreateConfigForm(projectID uuid.UUID, errors forms.FormErrors) {
 		hx-swap="beforeend"
 		{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", GetModalFormId(projectID))}... }
 	>
-		<input type="text" name="name" placeholder="Configuration name" required class={ GetInputClass("Name", errors, "mt-3") }/>
-		if err, ok := errors["Name"]; ok {
-			<small class="text-red-400">{ err }</small>
-		}
-		<input type="text" name="header-name" placeholder="Header name" required class={ GetInputClass("HeaderName", errors, "mt-3") }/>
-		if err, ok := errors["HeaderName"]; ok {
-			<small class="text-red-400">{ err }</small>
-		}
-		<input type="text" name="header-value" placeholder="Header value" required class={ GetInputClass("HeaderValue", errors, "mt-3") }/>
-		if err, ok := errors["HeaderValue"]; ok {
-			<small class="text-red-400">{ err }</small>
-		}
+		<fieldset class="p-3 border rounded-lg border-gray-500 mt-3">
+			<legend>Config</legend>
+			<input type="text" name="name" placeholder="Configuration name" required class={ GetInputClass("Name", errors, "") }/>
+			if err, ok := errors["Name"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+			<input type="text" name="header-name" placeholder="Header name" required class={ GetInputClass("HeaderName", errors, "mt-3") }/>
+			if err, ok := errors["HeaderName"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+			<input type="text" name="header-value" placeholder="Header value" required class={ GetInputClass("HeaderValue", errors, "mt-3") }/>
+			if err, ok := errors["HeaderValue"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+		</fieldset>
+		<fieldset class="p-3 border rounded-lg border-gray-500 mt-3">
+			<legend>Rate Limit</legend>
+			<input type="number" name="num-of-requests" placeholder="Number of requests" required class={ GetInputClass("NumOfRequests", errors, "") }/>
+			if err, ok := errors["NumberOfRequests"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+			<select name="requests-per" class="select select-bordered w-full mt-3" required>
+				<option disabled selected>Per</option>
+				<option value="second">Second</option>
+				<option value="minute">Minute</option>
+				<option value="hour">Hour</option>
+				<option value="day">Day</option>
+			</select>
+			if err, ok := errors["Per"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+		</fieldset>
 		<button type="submit" class="btn btn-primary w-full mt-3">Create</button>
 	</form>
 }

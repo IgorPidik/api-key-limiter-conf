@@ -19,9 +19,11 @@ type CreateProjectForm struct {
 }
 
 type CreateConfigForm struct {
-	Name        string `form:"name" validate:"required"`
-	HeaderName  string `form:"header-name" validate:"required"`
-	HeaderValue string `form:"header-value" validate:"required"`
+	Name             string `form:"name" validate:"required"`
+	HeaderName       string `form:"header-name" validate:"required"`
+	HeaderValue      string `form:"header-value" validate:"required"`
+	NumberOfRequests int    `form:"num-of-requests" validate:"required"`
+	Per              string `form:"requests-per" validate:"required,oneof=second minute hour day"`
 }
 
 type ProjectHandler struct {
@@ -147,6 +149,7 @@ func (p *ProjectHandler) CreateConfig(c echo.Context) error {
 
 	config, configErr := p.db.CreateConfig(
 		projectID, createConfigForm.Name, "", createConfigForm.HeaderName, createConfigForm.HeaderValue,
+		createConfigForm.NumberOfRequests, createConfigForm.Per,
 	)
 	if configErr != nil {
 		log.Fatalf("Failed to create config: %e", configErr)
