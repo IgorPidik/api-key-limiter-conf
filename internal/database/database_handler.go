@@ -157,7 +157,7 @@ func (s *DatabaseHandler) DeleteProject(projectID uuid.UUID) error {
 
 func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
 	query := `
-		SELECT id, project_id, name, host, header_name, header_value
+		SELECT id, project_id, name, host, header_name, header_value, limit_requests_count, limit_duration
 		FROM configs
 		WHERE project_id = $1
 	`
@@ -173,6 +173,7 @@ func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, err
 		var config models.Config
 		if err := rows.Scan(
 			&config.ID, &config.ProjectID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+			&config.LimitNumberOfRequests, &config.LimitPer,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan config row: %v", err)
 		}
@@ -183,7 +184,8 @@ func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, err
 	return configs, nil
 }
 
-func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string, host string, header string, value string, numberOfRequests int, per string) (*models.Config, error) {
+func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string, host string, header string,
+	value string, numberOfRequests int, per string) (*models.Config, error) {
 	query := `
 		INSERT into configs (project_id, name, host, header_name, header_value, limit_requests_count, limit_duration)
 		VALUES ($1, $2, $3, $4, $5, $6, $7) 
