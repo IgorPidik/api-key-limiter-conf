@@ -18,20 +18,21 @@ templ ConfigDetails(config models.Config) {
 		aria-label={ config.Name }
 	/>
 	<div role="tabpanel" class="tab-content p-6 pb-2">
-		<div class="grid grid-cols-2">
-			<span class="font-bold">Config ID</span>
-			<span>{ config.ID.String() }</span>
-			<!-- <span class="font-bold">Host</span> -->
-			<!-- <span>{ config.Host }</span> -->
-			<span class="font-bold">Header name</span>
-			<span>{ config.HeaderName }</span>
-			<span class="font-bold">Header value</span>
-			<span>{ config.HeaderValue }</span>
-			<span class="font-bold">Limit number of requests</span>
-			<span>{ strconv.Itoa(config.LimitNumberOfRequests) }</span>
-			<span class="font-bold">Limit per</span>
-			<span>{ config.LimitPer }</span>
-		</div>
+		<fieldset class="p-3 border rounded-lg border-gray-500">
+			<legend class="font-bold text-lg">Details</legend>
+			<div class="grid grid-cols-2">
+				<span>Config ID</span>
+				<span class="text-right">{ config.ID.String() }</span>
+				<span>Limit number of requests</span>
+				<span class="text-right">{ strconv.Itoa(config.LimitNumberOfRequests) }</span>
+				<span>Limit per</span>
+				<span class="text-right">{ config.LimitPer }</span>
+			</div>
+		</fieldset>
+		<fieldset class="mt-3 p-3 border rounded-lg border-gray-500">
+			<legend class="font-bold text-lg">Replace headers</legend>
+			@ListHeaderReplacements(config.HeaderReplacements)
+		</fieldset>
 		<div class="mt-3 flex justify-end">
 			<button
 				class="btn btn-error flex-1 max-w-[50%]"

@@ -157,7 +157,7 @@ func (s *DatabaseHandler) DeleteProject(projectID uuid.UUID) error {
 
 func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
 	query := `
-		SELECT id, project_id, name, host, header_name, header_value, limit_requests_count, limit_duration
+		SELECT id, project_id, name, limit_requests_count, limit_duration
 		FROM configs
 		WHERE project_id = $1
 	`
@@ -172,28 +172,33 @@ func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, err
 	for rows.Next() {
 		var config models.Config
 		if err := rows.Scan(
-			&config.ID, &config.ProjectID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+			&config.ID, &config.ProjectID, &config.Name,
 			&config.LimitNumberOfRequests, &config.LimitPer,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan config row: %v", err)
 		}
-
+		// list header replacements
+		replacements, replacementsErr := s.ListHeaderReplacements(config.ID)
+		if replacementsErr != nil {
+			return nil, fmt.Errorf("failed to list header replacements for configID: %s:  %v", config.ID.String(), replacementsErr)
+		}
+		config.HeaderReplacements = replacements
 		configs = append(configs, config)
 	}
 
 	return configs, nil
 }
 
-func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string, host string, header string,
-	value string, numberOfRequests int, per string) (*models.Config, error) {
+func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string,
+	numberOfRequests int, per string) (*models.Config, error) {
 	query := `
-		INSERT into configs (project_id, name, host, header_name, header_value, limit_requests_count, limit_duration)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) 
-		RETURNING id, project_id, name, host, header_name, header_value, limit_requests_count, limit_duration
+		INSERT into configs (project_id, name, limit_requests_count, limit_duration)
+		VALUES ($1, $2, $3, $4) 
+		RETURNING id, project_id, name, limit_requests_count, limit_duration
 	`
 	var config models.Config
-	if err := s.DB.QueryRow(query, projectID, name, host, header, value, numberOfRequests, per).Scan(
-		&config.ID, &config.ProjectID, &config.Name, &config.Host, &config.HeaderName, &config.HeaderValue,
+	if err := s.DB.QueryRow(query, projectID, name, numberOfRequests, per).Scan(
+		&config.ID, &config.ProjectID, &config.Name,
 		&config.LimitNumberOfRequests, &config.LimitPer,
 	); err != nil {
 		return nil, fmt.Errorf("failed to create config: %v", err)
@@ -212,4 +217,47 @@ func (s *DatabaseHandler) DeleteConfig(projectID uuid.UUID, configID uuid.UUID) 
 	}
 
 	return nil
+}
+
+func (s *DatabaseHandler) ListHeaderReplacements(configID uuid.UUID) ([]models.HeaderReplacement, error) {
+	query := `
+		SELECT id, config_id, header_name, header_value
+		FROM header_replacements
+		WHERE config_id = $1
+	`
+	rows, err := s.DB.Query(query, configID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query projects: %v", err)
+	}
+	defer rows.Close()
+
+	var replacements []models.HeaderReplacement
+	for rows.Next() {
+		var replacement models.HeaderReplacement
+		if err := rows.Scan(
+			&replacement.ID, &replacement.ConfigID, &replacement.HeaderName, &replacement.HeaderValue,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan config row: %v", err)
+		}
+
+		replacements = append(replacements, replacement)
+	}
+
+	return replacements, nil
+}
+
+func (s *DatabaseHandler) CreateHeaderReplacement(configID uuid.UUID, name string, value string) (*models.HeaderReplacement, error) {
+	query := `
+		INSERT INTO header_replacements (config_id, header_name, header_value)
+		VALUES ($1, $2, $3)
+		RETURNING id, config_id, header_name, header_value
+	`
+	var replacement models.HeaderReplacement
+	if err := s.DB.QueryRow(query, configID, name, value).Scan(
+		&replacement.ID, &replacement.ConfigID, &replacement.HeaderName, &replacement.HeaderValue,
+	); err != nil {
+		return nil, fmt.Errorf("failed to create header replacement: %v", err)
+	}
+
+	return &replacement, nil
 }

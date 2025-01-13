@@ -147,14 +147,18 @@ func (p *ProjectHandler) CreateConfig(c echo.Context) error {
 		return nil
 	}
 
-	config, configErr := p.db.CreateConfig(
-		projectID, createConfigForm.Name, "", createConfigForm.HeaderName, createConfigForm.HeaderValue,
-		createConfigForm.NumberOfRequests, createConfigForm.Per,
-	)
+	config, configErr := p.db.CreateConfig(projectID, createConfigForm.Name, createConfigForm.NumberOfRequests, createConfigForm.Per)
 	if configErr != nil {
 		log.Fatalf("Failed to create config: %e", configErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
+
+	headeReplacement, headerErr := p.db.CreateHeaderReplacement(config.ID, createConfigForm.HeaderName, createConfigForm.HeaderValue)
+	if headerErr != nil {
+		log.Fatalf("Failed to create header replacement: %e", headerErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+	config.HeaderReplacements = append(config.HeaderReplacements, *headeReplacement)
 
 	component := projects_components.ConfigDetails(*config)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {

@@ -1,0 +1,28 @@
+package projects_components
+
+import "configuration-management/internal/models"
+
+templ ListHeaderReplacements(replacements []models.HeaderReplacement) {
+	<div class="grid grid-cols-2 items-center">
+		for _, header := range replacements {
+			@HeaderReplacement(header)
+		}
+	</div>
+	@CreateHeaderReplacement()
+}
+
+templ HeaderReplacement(replacement models.HeaderReplacement) {
+	<span>{ replacement.HeaderName }</span>
+	<div class="text-right">
+		<span class="text-right">{ replacement.HeaderValue }</span>
+		<button class="ml-2 btn-sm btn btn-error">Delete</button>
+	</div>
+}
+
+templ CreateHeaderReplacement() {
+	<form class="mt-3 grid grid-cols-3 gap-3">
+		<input type="text" name="header-name" placeholder="Header name" required class="input input-bordered w-full"/>
+		<input type="text" name="header-value" placeholder="Header value" required class="input input-bordered w-full"/>
+		<button class="btn btn-primary" type="submit">Create</button>
+	</form>
+}
