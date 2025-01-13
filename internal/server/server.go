@@ -18,6 +18,7 @@ type Server struct {
 
 	db              *database.DatabaseHandler
 	projectsHandler *handlers.ProjectHandler
+	headersHandler  *handlers.HeaderReplacementsHandler
 }
 
 func NewServer() *http.Server {
@@ -26,6 +27,7 @@ func NewServer() *http.Server {
 	NewServer := &Server{
 		port:            port,
 		projectsHandler: handlers.NewProjectHandler(db),
+		headersHandler:  handlers.NewHeaderReplacementsHandler(db),
 		db:              db,
 	}
 

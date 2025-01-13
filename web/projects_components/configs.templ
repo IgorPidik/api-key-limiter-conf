@@ -31,7 +31,7 @@ templ ConfigDetails(config models.Config) {
 		</fieldset>
 		<fieldset class="mt-3 p-3 border rounded-lg border-gray-500">
 			<legend class="font-bold text-lg">Replace headers</legend>
-			@ListHeaderReplacements(config.HeaderReplacements)
+			@ListHeaderReplacements(config.ProjectID, config.ID, config.HeaderReplacements)
 		</fieldset>
 		<div class="mt-3 flex justify-end">
 			<button
@@ -52,7 +52,7 @@ templ CreateConfigForm(projectID uuid.UUID, errors forms.FormErrors) {
 		id={ GetCreateConfigFormID(projectID) }
 		method="post"
 		action="/"
-		hx-post={ "/projects/" + projectID.String() }
+		hx-post={ "/projects/" + projectID.String() + "/configs" }
 		hx-target={ "#tabs_" + projectID.String() }
 		hx-swap="beforeend"
 		{ templ.Attributes{"hx-on::after-request": fmt.Sprintf("if(event.detail.successful) {this.reset(); %s.submit()}", GetModalFormId(projectID))}... }

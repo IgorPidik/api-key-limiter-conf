@@ -112,5 +112,4 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 	}
 
 	return nil
-
 }

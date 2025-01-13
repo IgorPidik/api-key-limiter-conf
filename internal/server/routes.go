@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	"configuration-management/web"
@@ -29,29 +28,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.GET("/projects", s.projectsHandler.ListProjects)
 	e.POST("/projects", s.projectsHandler.CreateProject)
 	e.DELETE("/projects/:id", s.projectsHandler.DeleteProject)
-	e.POST("/projects/:id", s.projectsHandler.CreateConfig)
+
+	e.POST("/projects/:id/configs", s.projectsHandler.CreateConfig)
 	e.DELETE("/projects/:id/configs/:configId", s.projectsHandler.DeleteConfig)
+
+	e.POST("/projects/:id/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
 
 	e.GET("/health", s.healthHandler)
 
 	return e
-}
-
-func (s *Server) HelloWorldHandler(c echo.Context) error {
-	resp := map[string]string{
-		"message": "Hello World",
-	}
-
-	return c.JSON(http.StatusOK, resp)
-}
-
-func (s *Server) ProjectsHandlers(c echo.Context) error {
-	projects, err := s.db.ListProjects()
-	if err != nil {
-		log.Fatalf("failed to return projects: %v\n", err)
-	}
-
-	return c.JSON(http.StatusOK, projects)
 }
 
 func (s *Server) healthHandler(c echo.Context) error {

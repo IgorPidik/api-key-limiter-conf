@@ -34,3 +34,7 @@ func GetInputClass(fieldName string, errors forms.FormErrors, additionalClasses 
 
 	return classes
 }
+
+func GetListHeaderReplacementID(configID uuid.UUID) string {
+	return "list_headers" + strings.Replace(configID.String(), "-", "", -1)
+}
