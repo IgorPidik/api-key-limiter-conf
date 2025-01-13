@@ -2,27 +2,38 @@ package projects_components
 
 import (
 	"configuration-management/internal/models"
+	"fmt"
 	"github.com/google/uuid"
 )
 
 templ ListHeaderReplacements(projectID uuid.UUID, configID uuid.UUID, replacements []models.HeaderReplacement) {
-	<div id={ GetListHeaderReplacementID(configID) } class="grid grid-cols-3 gap-3 items-center">
+	<div id={ GetListHeaderReplacementID(configID) }>
 		for _, header := range replacements {
-			@HeaderReplacement(header)
+			@HeaderReplacement(projectID, header)
 		}
 	</div>
 	@CreateHeaderReplacement(projectID, configID)
 }
 
-templ HeaderReplacement(replacement models.HeaderReplacement) {
-	<span>{ replacement.HeaderName }</span>
-	<span>{ replacement.HeaderValue }</span>
-	<button class="btn btn-error">Delete</button>
+templ HeaderReplacement(projectID uuid.UUID, replacement models.HeaderReplacement) {
+	<div class="items-center grid grid-cols-3 gap-3 mb-3">
+		<span>{ replacement.HeaderName }</span>
+		<span>{ replacement.HeaderValue }</span>
+		<button
+			class="btn btn-error"
+			class="btn btn-error flex-1 ml-2"
+			hx-target="closest div"
+			hx-swap="outerHTML"
+			hx-delete={ fmt.Sprintf("/projects/%s/configs/%s/headers/%s", projectID, replacement.ConfigID, replacement.ID) }
+		>
+			Delete
+		</button>
+	</div>
 }
 
 templ CreateHeaderReplacement(projectID uuid.UUID, configID uuid.UUID) {
 	<form
-		class="mt-3 grid grid-cols-3 gap-3"
+		class="grid grid-cols-3 gap-3"
 		method="post"
 		action="/"
 		hx-post={ "/projects/" + projectID.String() + "/configs/" + configID.String() + "/headers" }

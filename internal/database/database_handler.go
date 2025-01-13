@@ -213,7 +213,7 @@ func (s *DatabaseHandler) DeleteConfig(projectID uuid.UUID, configID uuid.UUID) 
 	`
 	_, err := s.DB.Exec(query, configID, projectID)
 	if err != nil {
-		return fmt.Errorf("failed to delete project: %v", err)
+		return fmt.Errorf("failed to delete config: %v", err)
 	}
 
 	return nil
@@ -260,4 +260,16 @@ func (s *DatabaseHandler) CreateHeaderReplacement(configID uuid.UUID, name strin
 	}
 
 	return &replacement, nil
+}
+
+func (s *DatabaseHandler) DeleteHeaderReplacement(configID uuid.UUID, headerID uuid.UUID) error {
+	query := `
+		DELETE FROM header_replacements WHERE id=$1 AND config_id = $2
+	`
+	_, err := s.DB.Exec(query, headerID, configID)
+	if err != nil {
+		return fmt.Errorf("failed to delete header: %v", err)
+	}
+
+	return nil
 }

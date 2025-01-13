@@ -29,41 +29,12 @@ func NewHeaderReplacementsHandler(db *database.DatabaseHandler) *HeaderReplaceme
 	return &HeaderReplacementsHandler{db, form.NewDecoder(), validate}
 }
 
-func (h *HeaderReplacementsHandler) ListHeaderReplacements(c echo.Context) error {
-	// projectID, projectIDErr := uuid.Parse(c.Param("id"))
-	// if projectIDErr != nil {
-	// 	log.Fatalf("Invalid project id: %e", projectIDErr)
-	// 	return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
-	// }
-
-	// configID, configIDErr := uuid.Parse(c.Param("configId"))
-	// if configIDErr != nil {
-	// 	log.Fatalf("Invalid config id: %e", configIDErr)
-	// 	return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
-	// }
-	//
-	// headers, listErr := h.db.ListHeaderReplacements(configID)
-	// if listErr != nil {
-	// 	log.Fatalf("Failed to list header replacements: %e", listErr)
-	// 	return echo.NewHTTPError(http.StatusInternalServerError)
-	// }
-
-	// component := projects_components.ListHeaderReplacements(headers)
-	// renderErr := component.Render(c.Request().Context(), c.Response().Writer)
-	// if renderErr != nil {
-	// 	log.Fatalf("Error rendering in ListProjects: %e", renderErr)
-	// 	return echo.NewHTTPError(http.StatusInternalServerError)
-	// }
-
-	return nil
-}
-
 func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) error {
-	// projectID, idErr := uuid.Parse(c.Param("id"))
-	// if idErr != nil {
-	// 	log.Fatalf("Invalid project id: %e", idErr)
-	// 	return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
-	// }
+	projectID, projectIDErr := uuid.Parse(c.Param("id"))
+	if projectIDErr != nil {
+		log.Fatalf("Invalid project id: %e", projectIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
+	}
 
 	configID, configIDErr := uuid.Parse(c.Param("configId"))
 	if configIDErr != nil {
@@ -105,9 +76,30 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	component := projects_components.HeaderReplacement(*replacement)
+	component := projects_components.HeaderReplacement(projectID, *replacement)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 		log.Fatalf("Error rendering created header replacement: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return nil
+}
+
+func (h *HeaderReplacementsHandler) DeleteHeaderReplacement(c echo.Context) error {
+	configID, configIDErr := uuid.Parse(c.Param("configId"))
+	if configIDErr != nil {
+		log.Fatalf("Invalid config id: %e", configIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
+	}
+
+	headerID, headerIDErr := uuid.Parse(c.Param("headerId"))
+	if headerIDErr != nil {
+		log.Fatalf("Invalid header id: %e", headerIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid header id")
+	}
+
+	if deleteErr := h.db.DeleteHeaderReplacement(configID, headerID); deleteErr != nil {
+		log.Fatalf("Failed to delete header: %e", deleteErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 

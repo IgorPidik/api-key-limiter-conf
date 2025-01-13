@@ -33,6 +33,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.DELETE("/projects/:id/configs/:configId", s.projectsHandler.DeleteConfig)
 
 	e.POST("/projects/:id/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
+	e.DELETE("/projects/:id/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
 
 	e.GET("/health", s.healthHandler)
 
