@@ -1,6 +1,7 @@
 package projects_components
 
 import (
+	"configuration-management/internal/forms"
 	"configuration-management/internal/models"
 	"fmt"
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ templ ListHeaderReplacements(projectID uuid.UUID, configID uuid.UUID, replacemen
 			@HeaderReplacement(projectID, header)
 		}
 	</div>
-	@CreateHeaderReplacement(projectID, configID)
+	@CreateHeaderReplacement(projectID, configID, nil)
 }
 
 templ HeaderReplacement(projectID uuid.UUID, replacement models.HeaderReplacement) {
@@ -31,8 +32,9 @@ templ HeaderReplacement(projectID uuid.UUID, replacement models.HeaderReplacemen
 	</div>
 }
 
-templ CreateHeaderReplacement(projectID uuid.UUID, configID uuid.UUID) {
+templ CreateHeaderReplacement(projectID uuid.UUID, configID uuid.UUID, errors forms.FormErrors) {
 	<form
+		id={ GetCreateHeaderFormID(configID) }
 		class="grid grid-cols-3 gap-3"
 		method="post"
 		action="/"
@@ -41,8 +43,18 @@ templ CreateHeaderReplacement(projectID uuid.UUID, configID uuid.UUID) {
 		hx-swap="beforeend"
 		hx-on::after-request="if(event.detail.successful) this.reset()"
 	>
-		<input type="text" name="header-name" placeholder="Header name" required class="input input-bordered w-full"/>
-		<input type="text" name="header-value" placeholder="Header value" required class="input input-bordered w-full"/>
+		<div>
+			<input type="text" name="header-name" required placeholder="Header name" class={ GetInputClass("HeaderName", errors, "") }/>
+			if err, ok := errors["HeaderName"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+		</div>
+		<div>
+			<input type="text" name="header-value" required placeholder="Header value" class={ GetInputClass("HeaderValue", errors, "") }/>
+			if err, ok := errors["HeaderValue"]; ok {
+				<small class="text-red-400">{ err }</small>
+			}
+		</div>
 		<button class="btn btn-primary" type="submit">Create</button>
 	</form>
 }

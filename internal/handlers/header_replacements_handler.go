@@ -57,15 +57,14 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 		for _, err := range validationErr.(validator.ValidationErrors) {
 			errors[err.Field()] = err.Tag()
 		}
-		// TODO: handle form errors
 
-		// c.Response().Header().Set("HX-Reswap", "outerHTML")
-		// c.Response().Header().Set("HX-Retarget", "#"+projects_components.GetCreateConfigFormID(projectID))
-		// component := projects_components.CreateHeaderReplacementForm(projectID, errors)
-		// if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
-		// 	log.Fatalf("Error rendering created config: %e", err)
-		// 	return echo.NewHTTPError(http.StatusInternalServerError)
-		// }
+		c.Response().Header().Set("HX-Reswap", "outerHTML")
+		c.Response().Header().Set("HX-Retarget", "#"+projects_components.GetCreateHeaderFormID(configID))
+		component := projects_components.CreateHeaderReplacement(projectID, configID, errors)
+		if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
+			log.Fatalf("Error rendering created header replacement: %e", err)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
 		c.Response().WriteHeader(http.StatusBadRequest)
 		return nil
 	}

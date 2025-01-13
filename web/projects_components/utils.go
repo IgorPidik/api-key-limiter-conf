@@ -22,6 +22,10 @@ func GetCreateConfigFormID(projectID uuid.UUID) string {
 	return "create_config_form" + strings.Replace(projectID.String(), "-", "", -1)
 }
 
+func GetCreateHeaderFormID(configID uuid.UUID) string {
+	return "create_header_form" + strings.Replace(configID.String(), "-", "", -1)
+}
+
 func GetInputClass(fieldName string, errors forms.FormErrors, additionalClasses string) string {
 	classes := "input input-bordered w-full"
 	if _, ok := errors[fieldName]; ok {
