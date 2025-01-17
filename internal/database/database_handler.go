@@ -273,3 +273,31 @@ func (s *DatabaseHandler) DeleteHeaderReplacement(configID uuid.UUID, headerID u
 
 	return nil
 }
+
+func (s *DatabaseHandler) CreateUser(oauth2ID int, name string) (*models.User, error) {
+	query := `
+		INSERT INTO users (oauth2_id, name)
+		VALUES ($1, $2)
+		ON CONFLICT (oauth2_id) DO NOTHING;
+	`
+
+	if _, err := s.DB.Exec(query, oauth2ID, name); err != nil {
+		return nil, fmt.Errorf("failed to create user: %v", err)
+	}
+
+	return s.GetUser(oauth2ID)
+}
+
+func (s *DatabaseHandler) GetUser(oauth2ID int) (*models.User, error) {
+	query := `
+		SELECT id, oauth2_id, name FROM users WHERE oauth2_id=$1;
+	`
+
+	var user models.User
+	if err := s.DB.QueryRow(query, oauth2ID).Scan(
+		&user.ID, &user.OAuth2ID, &user.Name); err != nil {
+		return nil, fmt.Errorf("failed to get user: %v", err)
+	}
+
+	return &user, nil
+}

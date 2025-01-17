@@ -25,6 +25,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	fileServer := http.FileServer(http.FS(web.Files))
 	e.GET("/assets/*", echo.WrapHandler(fileServer))
 
+	e.GET("/login", s.loginHandler.Login)
+	e.GET("/auth/github", s.loginHandler.LoginWithGitlab)
+	e.GET("/auth/github/callback", s.loginHandler.GithubCallback)
+
 	e.GET("/projects", s.projectsHandler.ListProjects)
 	e.POST("/projects", s.projectsHandler.CreateProject)
 	e.DELETE("/projects/:id", s.projectsHandler.DeleteProject)

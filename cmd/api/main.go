@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"configuration-management/internal/server"
+	"github.com/joho/godotenv"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -37,6 +38,10 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
+	envErr := godotenv.Load()
+	if envErr != nil {
+		log.Fatalf("Error loading .env file: %v\n", envErr)
+	}
 
 	server := server.NewServer()
 

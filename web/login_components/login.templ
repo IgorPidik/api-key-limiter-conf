@@ -1,0 +1,11 @@
+package login_components
+
+import "configuration-management/web"
+
+templ Login() {
+	@web.Base() {
+		<div>Login</div>
+		<!-- <a href={ templ.URL("/auth/github/login?from=http://localhost:8000") }>github</a> -->
+		<a href={ templ.URL("/auth/github") }>Login with github</a>
+	}
+}
