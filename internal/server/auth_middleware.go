@@ -19,8 +19,8 @@ func (s *Server) UserAuth(next echo.HandlerFunc) echo.HandlerFunc {
 
 		sessionIDString, ok := sess.Values["session_id"]
 		if !ok {
-			log.Println("no session id")
-			return echo.NewHTTPError(http.StatusInternalServerError)
+			log.Println("no session id, redirecting")
+			return c.Redirect(http.StatusTemporaryRedirect, "/login")
 		}
 
 		sessionID, parseErr := uuid.Parse(sessionIDString.(string))
