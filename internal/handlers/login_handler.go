@@ -13,6 +13,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -83,17 +85,44 @@ func (l *LoginHandler) GithubCallback(c echo.Context) error {
 	client := l.conf.Client(context.Background(), tok)
 	resp, err := client.Get("https://api.github.com/user")
 	if err != nil {
-		panic(err)
+		log.Printf("error fetching user data from github: %v\n", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
 	var githubUser models.GithubUser
 	json.NewDecoder(resp.Body).Decode(&githubUser)
-	_, userErr := l.db.CreateUser(githubUser.Id, githubUser.Name)
+	user, userErr := l.db.CreateUser(githubUser.Id, githubUser.Name)
 	if userErr != nil {
 		log.Printf("failed to create a user: %v\n", userErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	return nil
+	userSession, sessionErr := l.db.CreateUserSession(user.ID)
+	if sessionErr != nil {
+		log.Printf("failed to create user session: %v\n", sessionErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	// create session
+	sess, err := session.Get("session", c)
+	if err != nil {
+		log.Printf("failed to create session cookie: %v\n", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	sess.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7,
+		HttpOnly: true,
+	}
+
+	sess.Values["session_id"] = userSession.ID.String()
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		log.Printf("failed to update session in request: %v\n", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return c.Redirect(http.StatusPermanentRedirect, "/projects")
 }
 
 func randString(n int) (string, error) {

@@ -5,12 +5,15 @@ import (
 
 	"configuration-management/web"
 
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	e := echo.New()
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 

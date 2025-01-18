@@ -4,6 +4,7 @@ import (
 	"configuration-management/internal/models"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -300,4 +301,34 @@ func (s *DatabaseHandler) GetUser(oauth2ID int) (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (s *DatabaseHandler) CreateUserSession(userID uuid.UUID) (*models.Session, error) {
+	query := `
+		INSERT INTO user_sessions (user_id) VALUES ($1)
+		RETURNING id, user_id, created_at
+	`
+
+	var session models.Session
+	if err := s.DB.QueryRow(query, userID).Scan(&session.ID, &session.UserID, &session.CreatedAt); err != nil {
+		return nil, fmt.Errorf("failed to create user session: %v", err)
+	}
+
+	return &session, nil
+}
+
+func (s *DatabaseHandler) FindUserSession(sessionID uuid.UUID) (*models.Session, error) {
+	query := `
+		SELECT id, user_id, created_at FROM user_sessions WHERE id = $1 
+	`
+
+	var session models.Session
+	if err := s.DB.QueryRow(query, sessionID).Scan(&session.ID, &session.UserID, &session.CreatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to find user session: %v", err)
+	}
+
+	return &session, nil
 }
