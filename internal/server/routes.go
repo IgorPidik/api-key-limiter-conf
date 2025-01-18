@@ -32,7 +32,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.GET("/auth/github", s.loginHandler.LoginWithGitlab)
 	e.GET("/auth/github/callback", s.loginHandler.GithubCallback)
 
-	e.GET("/projects", s.projectsHandler.ListProjects)
+	e.GET("/projects", s.projectsHandler.ListProjects, s.UserAuth)
 	e.POST("/projects", s.projectsHandler.CreateProject)
 	e.DELETE("/projects/:id", s.projectsHandler.DeleteProject)
 

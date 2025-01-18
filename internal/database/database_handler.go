@@ -317,7 +317,7 @@ func (s *DatabaseHandler) CreateUserSession(userID uuid.UUID) (*models.Session, 
 	return &session, nil
 }
 
-func (s *DatabaseHandler) FindUserSession(sessionID uuid.UUID) (*models.Session, error) {
+func (s *DatabaseHandler) GetUserSession(sessionID uuid.UUID) (*models.Session, error) {
 	query := `
 		SELECT id, user_id, created_at FROM user_sessions WHERE id = $1 
 	`

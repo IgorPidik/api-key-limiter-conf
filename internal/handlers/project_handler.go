@@ -38,6 +38,14 @@ func NewProjectHandler(db *database.DatabaseHandler) *ProjectHandler {
 }
 
 func (p *ProjectHandler) ListProjects(c echo.Context) error {
+	userId, ok := c.Get("userID").(string)
+	if !ok {
+		log.Println("Missing user")
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	log.Printf("found user: %s\n", userId)
+
 	projects, err := p.db.ListProjects()
 	if err != nil {
 		log.Fatalf("Error fetching projects: %v\n", err)
