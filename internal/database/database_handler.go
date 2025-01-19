@@ -130,6 +130,22 @@ func (s *DatabaseHandler) ListProjects(userID uuid.UUID) ([]models.Project, erro
 	return projects, nil
 }
 
+func (s *DatabaseHandler) GetProject(projectID uuid.UUID) (*models.Project, error) {
+	query := `
+		SELECT id, name, access_key, user_id
+		FROM projects
+		WHERE id = $1
+	`
+
+	var project models.Project
+	if err := s.DB.QueryRow(query, projectID).Scan(&project.ID, &project.Name,
+		&project.AccessKey, &project.UserID); err != nil {
+		return nil, fmt.Errorf("failed to query project: %v", err)
+	}
+
+	return &project, nil
+}
+
 func (s *DatabaseHandler) CreateProject(name string, accessKey string, userID uuid.UUID) (*models.Project, error) {
 	query := `
 		INSERT into projects (name, access_key, user_id)

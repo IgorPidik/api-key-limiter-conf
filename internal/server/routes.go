@@ -38,13 +38,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 	projectsGroup := e.Group("/projects", s.UserAuth)
 	projectsGroup.GET("", s.projectsHandler.ListProjects, s.UserAuth)
 	projectsGroup.POST("", s.projectsHandler.CreateProject)
-	projectsGroup.DELETE("/:id", s.projectsHandler.DeleteProject)
 
-	projectsGroup.POST("/:id/configs", s.projectsHandler.CreateConfig)
-	projectsGroup.DELETE("/:id/configs/:configId", s.projectsHandler.DeleteConfig)
+	projectActionsGroup := projectsGroup.Group("/:id", s.ProjectBelongsToLoggedUser)
+	projectActionsGroup.DELETE("", s.projectsHandler.DeleteProject)
 
-	projectsGroup.POST("/:id/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
-	projectsGroup.DELETE("/:id/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
+	projectActionsGroup.POST("/configs", s.projectsHandler.CreateConfig)
+	projectActionsGroup.DELETE("/configs/:configId", s.projectsHandler.DeleteConfig)
+
+	projectActionsGroup.POST("/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
+	projectActionsGroup.DELETE("/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
 
 	return e
 }
