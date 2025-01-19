@@ -3,6 +3,7 @@ package handlers
 import (
 	"configuration-management/internal/database"
 	"configuration-management/internal/forms"
+	"configuration-management/internal/models"
 	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
 	"log"
@@ -38,19 +39,19 @@ func NewProjectHandler(db *database.DatabaseHandler) *ProjectHandler {
 }
 
 func (p *ProjectHandler) ListProjects(c echo.Context) error {
-	userID, ok := c.Get("userID").(string)
+	user, ok := c.Get("user").(*models.User)
 	if !ok {
 		log.Println("Missing user")
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	projects, err := p.db.ListProjects(uuid.MustParse(userID))
+	projects, err := p.db.ListProjects(user.ID)
 	if err != nil {
 		log.Fatalf("Error fetching projects: %v\n", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	component := projects_components.Projects(projects)
+	component := projects_components.Projects(user, projects)
 	renderErr := component.Render(c.Request().Context(), c.Response().Writer)
 	if renderErr != nil {
 		log.Fatalf("Error rendering in ListProjects: %e", renderErr)

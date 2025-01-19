@@ -293,28 +293,42 @@ func (s *DatabaseHandler) DeleteHeaderReplacement(configID uuid.UUID, headerID u
 	return nil
 }
 
-func (s *DatabaseHandler) CreateUser(oauth2ID int, name string) (*models.User, error) {
+func (s *DatabaseHandler) CreateUser(oauth2ID int, name string, avatarUrl string) (*models.User, error) {
 	query := `
-		INSERT INTO users (oauth2_id, name)
-		VALUES ($1, $2)
+		INSERT INTO users (oauth2_id, name, avatarUrl)
+		VALUES ($1, $2, $3)
 		ON CONFLICT (oauth2_id) DO NOTHING;
 	`
 
-	if _, err := s.DB.Exec(query, oauth2ID, name); err != nil {
+	if _, err := s.DB.Exec(query, oauth2ID, name, avatarUrl); err != nil {
 		return nil, fmt.Errorf("failed to create user: %v", err)
 	}
 
-	return s.GetUser(oauth2ID)
+	return s.GetUserByOAuth2ID(oauth2ID)
 }
 
-func (s *DatabaseHandler) GetUser(oauth2ID int) (*models.User, error) {
+func (s *DatabaseHandler) GetUserByOAuth2ID(oauth2ID int) (*models.User, error) {
 	query := `
-		SELECT id, oauth2_id, name FROM users WHERE oauth2_id=$1;
+		SELECT id, oauth2_id, name, avatarUrl FROM users WHERE oauth2_id=$1;
 	`
 
 	var user models.User
 	if err := s.DB.QueryRow(query, oauth2ID).Scan(
-		&user.ID, &user.OAuth2ID, &user.Name); err != nil {
+		&user.ID, &user.OAuth2ID, &user.Name, &user.AvatarUrl); err != nil {
+		return nil, fmt.Errorf("failed to get user: %v", err)
+	}
+
+	return &user, nil
+}
+
+func (s *DatabaseHandler) GetUser(userID uuid.UUID) (*models.User, error) {
+	query := `
+		SELECT id, oauth2_id, name, avatarUrl FROM users WHERE id=$1;
+	`
+
+	var user models.User
+	if err := s.DB.QueryRow(query, userID).Scan(
+		&user.ID, &user.OAuth2ID, &user.Name, &user.AvatarUrl); err != nil {
 		return nil, fmt.Errorf("failed to get user: %v", err)
 	}
 

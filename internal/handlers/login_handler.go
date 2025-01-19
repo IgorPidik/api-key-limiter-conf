@@ -114,7 +114,7 @@ func (l *LoginHandler) GithubCallback(c echo.Context) error {
 
 	var githubUser models.GithubUser
 	json.NewDecoder(resp.Body).Decode(&githubUser)
-	user, userErr := l.db.CreateUser(githubUser.Id, githubUser.Name)
+	user, userErr := l.db.CreateUser(githubUser.Id, githubUser.Name, githubUser.AvatarUrl)
 	if userErr != nil {
 		log.Printf("failed to create a user: %v\n", userErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)

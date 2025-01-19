@@ -6,8 +6,8 @@ import (
 	"configuration-management/web"
 )
 
-templ Projects(projects []models.Project) {
-	@web.Base() {
+templ Projects(user *models.User, projects []models.Project) {
+	@web.Base(user) {
 		@CreateProject(nil)
 		@ListProjects(projects)
 	}

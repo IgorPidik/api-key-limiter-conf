@@ -41,7 +41,13 @@ func (s *Server) UserAuth(next echo.HandlerFunc) echo.HandlerFunc {
 
 		}
 
-		c.Set("userID", userSession.UserID.String())
+		user, userErr := s.db.GetUser(userSession.UserID)
+		if userErr != nil {
+			log.Printf("failed to get user: %v\n", userErr)
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+
+		c.Set("user", user)
 		return next(c)
 	}
 }
