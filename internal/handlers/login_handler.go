@@ -46,6 +46,29 @@ func (l *LoginHandler) Login(c echo.Context) error {
 	return nil
 }
 
+func (l *LoginHandler) Logout(c echo.Context) error {
+	// get session
+	sess, err := session.Get("session", c)
+	if err != nil {
+		log.Printf("failed to get session cookie: %v\n", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	sess.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   1,
+		HttpOnly: true,
+	}
+
+	delete(sess.Values, "session_id")
+	if err := sess.Save(c.Request(), c.Response()); err != nil {
+		log.Printf("failed to update session in request: %v\n", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return c.Redirect(http.StatusPermanentRedirect, "/login")
+}
+
 func (l *LoginHandler) LoginWithGitlab(c echo.Context) error {
 	// Generate a random state for CSRF protection and set it in a cookie.
 	state, err := randString(16)

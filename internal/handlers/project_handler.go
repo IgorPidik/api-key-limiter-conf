@@ -38,15 +38,13 @@ func NewProjectHandler(db *database.DatabaseHandler) *ProjectHandler {
 }
 
 func (p *ProjectHandler) ListProjects(c echo.Context) error {
-	userId, ok := c.Get("userID").(string)
+	userID, ok := c.Get("userID").(string)
 	if !ok {
 		log.Println("Missing user")
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	log.Printf("found user: %s\n", userId)
-
-	projects, err := p.db.ListProjects()
+	projects, err := p.db.ListProjects(uuid.MustParse(userID))
 	if err != nil {
 		log.Fatalf("Error fetching projects: %v\n", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -63,6 +61,12 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 }
 
 func (p *ProjectHandler) CreateProject(c echo.Context) error {
+	userID, ok := c.Get("userID").(string)
+	if !ok {
+		log.Println("Missing user")
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
 	if c.Request().ParseForm() != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
@@ -91,8 +95,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 
 	accessKey := utils.GenerateToken(126)
 
-	userId := uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, userId)
+	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, uuid.MustParse(userID))
 	if projectErr != nil {
 		log.Fatalf("Error creating project: %e", projectErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)

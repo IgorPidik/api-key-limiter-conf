@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 
 	"configuration-management/web"
 
@@ -13,7 +14,7 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	e := echo.New()
-	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -27,22 +28,23 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	fileServer := http.FileServer(http.FS(web.Files))
 	e.GET("/assets/*", echo.WrapHandler(fileServer))
+	e.GET("/health", s.healthHandler)
 
 	e.GET("/login", s.loginHandler.Login)
+	e.GET("/logout", s.loginHandler.Logout)
 	e.GET("/auth/github", s.loginHandler.LoginWithGitlab)
 	e.GET("/auth/github/callback", s.loginHandler.GithubCallback)
 
-	e.GET("/projects", s.projectsHandler.ListProjects, s.UserAuth)
-	e.POST("/projects", s.projectsHandler.CreateProject)
-	e.DELETE("/projects/:id", s.projectsHandler.DeleteProject)
+	projectsGroup := e.Group("/projects", s.UserAuth)
+	projectsGroup.GET("", s.projectsHandler.ListProjects, s.UserAuth)
+	projectsGroup.POST("", s.projectsHandler.CreateProject)
+	projectsGroup.DELETE("/:id", s.projectsHandler.DeleteProject)
 
-	e.POST("/projects/:id/configs", s.projectsHandler.CreateConfig)
-	e.DELETE("/projects/:id/configs/:configId", s.projectsHandler.DeleteConfig)
+	projectsGroup.POST("/:id/configs", s.projectsHandler.CreateConfig)
+	projectsGroup.DELETE("/:id/configs/:configId", s.projectsHandler.DeleteConfig)
 
-	e.POST("/projects/:id/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
-	e.DELETE("/projects/:id/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
-
-	e.GET("/health", s.healthHandler)
+	projectsGroup.POST("/:id/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
+	projectsGroup.DELETE("/:id/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
 
 	return e
 }

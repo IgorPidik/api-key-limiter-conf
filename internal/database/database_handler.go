@@ -97,13 +97,15 @@ func (s *DatabaseHandler) Close() error {
 	return s.DB.Close()
 }
 
-func (s *DatabaseHandler) ListProjects() ([]models.Project, error) {
+func (s *DatabaseHandler) ListProjects(userID uuid.UUID) ([]models.Project, error) {
 	query := `
 		SELECT id, name, access_key
-		FROM projects ORDER BY timestamp DESC
+		FROM projects
+		WHERE user_id = $1
+		ORDER BY timestamp DESC
 	`
 
-	rows, err := s.DB.Query(query)
+	rows, err := s.DB.Query(query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query projects: %v", err)
 	}
