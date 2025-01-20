@@ -1,6 +1,7 @@
 package server
 
 import (
+	"configuration-management/internal/models"
 	"log"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 func (s *Server) ProjectBelongsToLoggedUser(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		userID, ok := c.Get("userID").(string)
+		user, ok := c.Get("user").(*models.User)
 		if !ok {
 			log.Println("Missing user")
 			return echo.NewHTTPError(http.StatusInternalServerError)
@@ -27,7 +28,7 @@ func (s *Server) ProjectBelongsToLoggedUser(next echo.HandlerFunc) echo.HandlerF
 
 		}
 
-		if project.UserID != uuid.MustParse(userID) {
+		if project.UserID != user.ID {
 			log.Println("project does not belong to the logged user")
 			return echo.NewHTTPError(http.StatusUnauthorized)
 		}

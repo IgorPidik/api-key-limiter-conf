@@ -62,7 +62,7 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 }
 
 func (p *ProjectHandler) CreateProject(c echo.Context) error {
-	userID, ok := c.Get("userID").(string)
+	user, ok := c.Get("user").(*models.User)
 	if !ok {
 		log.Println("Missing user")
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -96,7 +96,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 
 	accessKey := utils.GenerateToken(126)
 
-	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, uuid.MustParse(userID))
+	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, user.ID)
 	if projectErr != nil {
 		log.Fatalf("Error creating project: %e", projectErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
