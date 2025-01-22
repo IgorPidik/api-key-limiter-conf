@@ -15,11 +15,11 @@ templ Base(user *models.User) {
 			<script src="https://cdn.tailwindcss.com"></script>
 		</head>
 		<body>
-			if user != nil {
-				<div class="navbar bg-base-100">
-					<div class="flex-1">
-						<a class="btn btn-ghost text-xl">API Key Limiter</a>
-					</div>
+			<div class="navbar bg-base-100">
+				<div class="flex-1">
+					<a class="btn btn-ghost text-xl">API Key Limiter</a>
+				</div>
+				if user != nil {
 					<div class="flex-none gap-2">
 						<div class="dropdown dropdown-end">
 							<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -37,8 +37,8 @@ templ Base(user *models.User) {
 							</ul>
 						</div>
 					</div>
-				</div>
-			}
+				}
+			</div>
 			<main class="max-w-[75%] mx-auto p-4">
 				{ children... }
 			</main>

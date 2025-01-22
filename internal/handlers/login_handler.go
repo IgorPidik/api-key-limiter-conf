@@ -47,7 +47,6 @@ func (l *LoginHandler) Login(c echo.Context) error {
 }
 
 func (l *LoginHandler) Logout(c echo.Context) error {
-	// get session
 	sess, err := session.Get("session", c)
 	if err != nil {
 		log.Printf("failed to get session cookie: %v\n", err)

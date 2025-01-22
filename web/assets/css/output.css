@@ -583,6 +583,10 @@ video {
   margin-bottom: 0.75rem;
 }
 
+.mb-5 {
+  margin-bottom: 1.25rem;
+}
+
 .ml-2 {
   margin-left: 0.5rem;
 }
@@ -593,6 +597,10 @@ video {
 
 .mt-3 {
   margin-top: 0.75rem;
+}
+
+.mt-auto {
+  margin-top: auto;
 }
 
 .flex {
@@ -696,6 +704,10 @@ video {
   padding: 1rem;
 }
 
+.p-5 {
+  padding: 1.25rem;
+}
+
 .p-6 {
   padding: 1.5rem;
 }
@@ -704,8 +716,17 @@ video {
   padding-bottom: 0.5rem;
 }
 
+.text-center {
+  text-align: center;
+}
+
 .text-right {
   text-align: right;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
 }
 
 .text-lg {

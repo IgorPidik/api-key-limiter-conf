@@ -4,8 +4,9 @@ import "configuration-management/web"
 
 templ Login() {
 	@web.Base(nil) {
-		<div>Login</div>
-		<!-- <a href={ templ.URL("/auth/github/login?from=http://localhost:8000") }>github</a> -->
-		<a href={ templ.URL("/auth/github") }>Login with github</a>
+		<div class="bg-base-300 rounded-lg mt-auto p-5 text-center">
+			<h1 class="font-bold text-2xl mb-5">To create a project and configurations you need to login</h1>
+			<a class="btn btn-primary" href={ templ.URL("/auth/github") }>Login with GitHub</a>
+		</div>
 	}
 }
