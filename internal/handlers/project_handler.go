@@ -171,7 +171,13 @@ func (p *ProjectHandler) CreateConfig(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	headeReplacement, headerErr := p.db.CreateHeaderReplacement(config.ID, createConfigForm.HeaderName, createConfigForm.HeaderValue)
+	encryptedValue, encryptErr := utils.EncryptData(createConfigForm.HeaderValue)
+	if encryptErr != nil {
+		log.Fatalf("Failed to encrypt header value: %e", encryptErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	headeReplacement, headerErr := p.db.CreateHeaderReplacement(config.ID, createConfigForm.HeaderName, encryptedValue)
 	if headerErr != nil {
 		log.Fatalf("Failed to create header replacement: %e", headerErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -221,7 +227,7 @@ func (p *ProjectHandler) GetConfigConnection(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	accessToken, err := utils.DecryptToken(project.AccessKey)
+	accessToken, err := utils.DecryptData(project.AccessKey)
 	if err != nil {
 		log.Fatalf("Failed to decrypt access token: %e", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)

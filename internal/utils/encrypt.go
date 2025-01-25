@@ -18,27 +18,25 @@ func GenerateToken(length int) string {
 
 func GenerateEncryptedToken(length int) (string, error) {
 	token := GenerateToken(length)
-	secretKeyHex := os.Getenv("SECRET_KEY")
-	secretKey, decodeErr := hex.DecodeString(secretKeyHex)
-	if decodeErr != nil {
-		return "", decodeErr
-	}
-
-	encryptedToken, encryptErr := Encrypt(secretKey, token)
-	if encryptErr != nil {
-		return "", encryptErr
-	}
-
-	return encryptedToken, nil
+	return EncryptData(token)
 }
 
-func DecryptToken(token string) (string, error) {
+func DecryptData(data string) (string, error) {
 	secretKeyHex := os.Getenv("SECRET_KEY")
 	secretKey, decodeErr := hex.DecodeString(secretKeyHex)
 	if decodeErr != nil {
 		return "", decodeErr
 	}
-	return Decrypt(secretKey, token)
+	return Decrypt(secretKey, data)
+}
+
+func EncryptData(data string) (string, error) {
+	secretKeyHex := os.Getenv("SECRET_KEY")
+	secretKey, decodeErr := hex.DecodeString(secretKeyHex)
+	if decodeErr != nil {
+		return "", decodeErr
+	}
+	return Encrypt(secretKey, data)
 }
 
 func Encrypt(key []byte, data string) (string, error) {

@@ -265,6 +265,21 @@ func (s *DatabaseHandler) ListHeaderReplacements(configID uuid.UUID) ([]models.H
 	return replacements, nil
 }
 
+func (s *DatabaseHandler) GetHeaderReplacement(headerID uuid.UUID) (*models.HeaderReplacement, error) {
+	query := `
+		SELECT id, config_id, header_name, header_value
+		FROM header_replacements
+		WHERE id = $1
+	`
+	var replacement models.HeaderReplacement
+	if err := s.DB.QueryRow(query, headerID).Scan(
+		&replacement.ID, &replacement.ConfigID, &replacement.HeaderName, &replacement.HeaderValue); err != nil {
+		return nil, fmt.Errorf("failed to get header replacement: %v", err)
+	}
+
+	return &replacement, nil
+}
+
 func (s *DatabaseHandler) CreateHeaderReplacement(configID uuid.UUID, name string, value string) (*models.HeaderReplacement, error) {
 	query := `
 		INSERT INTO header_replacements (config_id, header_name, header_value)

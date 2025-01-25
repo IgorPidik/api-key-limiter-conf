@@ -19,7 +19,14 @@ templ ListHeaderReplacements(projectID uuid.UUID, configID uuid.UUID, replacemen
 templ HeaderReplacement(projectID uuid.UUID, replacement models.HeaderReplacement) {
 	<div class="items-center grid grid-cols-3 gap-3 mb-3">
 		<span>{ replacement.HeaderName }</span>
-		<span>{ replacement.HeaderValue }</span>
+		<div class="text-right">
+			<a
+				hx-get={ fmt.Sprintf("/projects/%s/configs/%s/headers/%s/value", projectID, replacement.ConfigID, replacement.ID) }
+				hx-target="closest div"
+				hx-swap="innerHTML"
+				class="link link-primary"
+			>Reveal</a>
+		</div>
 		<button
 			class="btn btn-error"
 			class="btn btn-error flex-1 ml-2"

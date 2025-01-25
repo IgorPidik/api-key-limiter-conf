@@ -3,6 +3,7 @@ package handlers
 import (
 	"configuration-management/internal/database"
 	"configuration-management/internal/forms"
+	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
 	"log"
 	"net/http"
@@ -69,7 +70,13 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 		return nil
 	}
 
-	replacement, replacementErr := h.db.CreateHeaderReplacement(configID, headerForm.HeaderName, headerForm.HeaderValue)
+	encryptedValue, encryptErr := utils.EncryptData(headerForm.HeaderValue)
+	if encryptErr != nil {
+		log.Fatalf("Failed to encrypt header value: %e", encryptErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	replacement, replacementErr := h.db.CreateHeaderReplacement(configID, headerForm.HeaderName, encryptedValue)
 	if replacementErr != nil {
 		log.Fatalf("Failed to create headerReplacement: %e", replacementErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -103,4 +110,26 @@ func (h *HeaderReplacementsHandler) DeleteHeaderReplacement(c echo.Context) erro
 	}
 
 	return nil
+}
+
+func (h *HeaderReplacementsHandler) GetHeaderReplacementValue(c echo.Context) error {
+	headerID, headerIDErr := uuid.Parse(c.Param("headerId"))
+	if headerIDErr != nil {
+		log.Fatalf("Invalid header id: %e", headerIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid header id")
+	}
+
+	header, err := h.db.GetHeaderReplacement(headerID)
+	if err != nil {
+		log.Fatalf("failed to fetch header replacement data: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	decryptedHeaderValue, err := utils.DecryptData(header.HeaderValue)
+	if err != nil {
+		log.Fatalf("failed to decrypt header value: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return c.String(http.StatusOK, decryptedHeaderValue)
 }
