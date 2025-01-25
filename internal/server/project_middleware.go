@@ -33,6 +33,7 @@ func (s *Server) ProjectBelongsToLoggedUser(next echo.HandlerFunc) echo.HandlerF
 			return echo.NewHTTPError(http.StatusUnauthorized)
 		}
 
+		c.Set("project", project)
 		return next(c)
 	}
 }

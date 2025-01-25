@@ -611,6 +611,11 @@ video {
   display: grid;
 }
 
+.size-6 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .h-screen {
   height: 100vh;
 }
@@ -665,6 +670,10 @@ video {
 
 .justify-end {
   justify-content: flex-end;
+}
+
+.gap-1 {
+  gap: 0.25rem;
 }
 
 .gap-2 {

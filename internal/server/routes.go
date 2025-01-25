@@ -45,6 +45,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	projectActionsGroup.POST("/configs", s.projectsHandler.CreateConfig)
 	projectActionsGroup.DELETE("/configs/:configId", s.projectsHandler.DeleteConfig)
 
+	projectActionsGroup.GET("/configs/:configId/connection", s.projectsHandler.GetConfigConnection)
+
 	projectActionsGroup.POST("/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
 	projectActionsGroup.DELETE("/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
 

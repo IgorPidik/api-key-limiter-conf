@@ -6,8 +6,10 @@ import (
 	"configuration-management/internal/models"
 	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
@@ -94,7 +96,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 		return nil
 	}
 
-	accessKey := utils.GenerateToken(126)
+	accessKey := utils.GenerateToken(32)
 
 	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, user.ID)
 	if projectErr != nil {
@@ -196,6 +198,30 @@ func (p *ProjectHandler) DeleteConfig(c echo.Context) error {
 
 	if deleteErr := p.db.DeleteConfig(projectID, configID); deleteErr != nil {
 		log.Fatalf("Failed to delete config: %e", deleteErr)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	return nil
+}
+
+func (p *ProjectHandler) GetConfigConnection(c echo.Context) error {
+	configID, configIDErr := uuid.Parse(c.Param("configId"))
+	if configIDErr != nil {
+		log.Fatalf("Invalid config id: %e", configIDErr)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
+	}
+
+	project, ok := c.Get("project").(*models.Project)
+	if !ok {
+		log.Println("Missing project")
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	host := os.Getenv("HOST_NAME")
+	connectionString := fmt.Sprintf("https://%s:%s@%s.com", configID, project.AccessKey, host)
+	component := projects_components.ConfigConnectionString(connectionString)
+	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
+		log.Fatalf("Error rendering connection string: %e", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
