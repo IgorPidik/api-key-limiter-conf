@@ -96,7 +96,11 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 		return nil
 	}
 
-	accessKey := utils.GenerateToken(32)
+	accessKey, err := utils.GenerateEncryptedToken(32)
+	if err != nil {
+		log.Fatalf("Error creating encrypted access key: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
 
 	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, user.ID)
 	if projectErr != nil {
@@ -217,8 +221,15 @@ func (p *ProjectHandler) GetConfigConnection(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
+	accessToken, err := utils.DecryptToken(project.AccessKey)
+	if err != nil {
+		log.Fatalf("Failed to decrypt access token: %e", err)
+		return echo.NewHTTPError(http.StatusInternalServerError)
+
+	}
+
 	host := os.Getenv("HOST_NAME")
-	connectionString := fmt.Sprintf("https://%s:%s@%s.com", configID, project.AccessKey, host)
+	connectionString := fmt.Sprintf("https://%s:%s@%s.com", configID, accessToken, host)
 	component := projects_components.ConfigConnectionString(connectionString)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 		log.Fatalf("Error rendering connection string: %e", err)

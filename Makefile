@@ -82,4 +82,7 @@ watch:
 migrate:
 	go run cmd/migrate/main.go
 
+generate-secret-key:
+	go run cmd/generate-secret-key/main.go
+
 .PHONY: all build run test clean watch tailwind-install docker-run docker-down itest templ-install
