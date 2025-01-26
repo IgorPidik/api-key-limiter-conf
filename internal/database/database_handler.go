@@ -313,11 +313,11 @@ func (s *DatabaseHandler) CreateHeaderReplacement(configID uuid.UUID, name strin
 	return &replacement, nil
 }
 
-func (s *DatabaseHandler) DeleteHeaderReplacement(configID uuid.UUID, headerID uuid.UUID) error {
+func (s *DatabaseHandler) DeleteHeaderReplacement(headerID uuid.UUID) error {
 	query := `
-		DELETE FROM header_replacements WHERE id=$1 AND config_id = $2
+		DELETE FROM header_replacements WHERE id=$1
 	`
-	_, err := s.DB.Exec(query, headerID, configID)
+	_, err := s.DB.Exec(query, headerID)
 	if err != nil {
 		return fmt.Errorf("failed to delete header: %v", err)
 	}

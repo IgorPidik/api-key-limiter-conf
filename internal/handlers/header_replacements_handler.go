@@ -3,6 +3,7 @@ package handlers
 import (
 	"configuration-management/internal/database"
 	"configuration-management/internal/forms"
+	"configuration-management/internal/models"
 	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
 	"log"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -30,27 +30,15 @@ func NewHeaderReplacementsHandler(db *database.DatabaseHandler) *HeaderReplaceme
 	return &HeaderReplacementsHandler{db, form.NewDecoder(), validate}
 }
 
-func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) error {
-	projectID, projectIDErr := uuid.Parse(c.Param("id"))
-	if projectIDErr != nil {
-		log.Fatalf("Invalid project id: %e", projectIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
-	}
-
-	configID, configIDErr := uuid.Parse(c.Param("configId"))
-	if configIDErr != nil {
-		log.Fatalf("Invalid config id: %e", configIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
-	}
-
+func (h *HeaderReplacementsHandler) processForm(c echo.Context) (*CreateHeaderReplacementForm, forms.FormErrors, error) {
 	if c.Request().ParseForm() != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest)
 	}
 
 	var headerForm CreateHeaderReplacementForm
 	if err := h.decoder.Decode(&headerForm, c.Request().Form); err != nil {
 		log.Fatalf("Error decoding CreateHeaderReplacementForm: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return nil, nil, echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
 	if validationErr := h.validate.Struct(headerForm); validationErr != nil {
@@ -58,15 +46,40 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 		for _, err := range validationErr.(validator.ValidationErrors) {
 			errors[err.Field()] = err.Tag()
 		}
+		return nil, errors, nil
 
+	}
+
+	return &headerForm, nil, nil
+}
+
+func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) error {
+	project, ok := c.Get("project").(*models.Project)
+	if !ok {
+		log.Println("Missing project instance in the context")
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	config, ok := c.Get("config").(*models.Config)
+	if !ok {
+		log.Println("Missing config instance in the context")
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	headerForm, formErrs, processingErr := h.processForm(c)
+	if processingErr != nil {
+		return processingErr
+	}
+
+	if formErrs != nil {
 		c.Response().Header().Set("HX-Reswap", "outerHTML")
-		c.Response().Header().Set("HX-Retarget", "#"+projects_components.GetCreateHeaderFormID(configID))
-		component := projects_components.CreateHeaderReplacement(projectID, configID, errors)
+		c.Response().Header().Set("HX-Retarget", "#"+projects_components.GetCreateHeaderFormID(config.ID))
+		component := projects_components.CreateHeaderReplacement(project.ID, config.ID, formErrs)
 		if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 			log.Fatalf("Error rendering created header replacement: %e", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		c.Response().WriteHeader(http.StatusBadRequest)
+
 		return nil
 	}
 
@@ -76,13 +89,13 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	replacement, replacementErr := h.db.CreateHeaderReplacement(configID, headerForm.HeaderName, encryptedValue)
+	replacement, replacementErr := h.db.CreateHeaderReplacement(config.ID, headerForm.HeaderName, encryptedValue)
 	if replacementErr != nil {
 		log.Fatalf("Failed to create headerReplacement: %e", replacementErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	component := projects_components.HeaderReplacement(projectID, *replacement)
+	component := projects_components.HeaderReplacement(project.ID, *replacement)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 		log.Fatalf("Error rendering created header replacement: %e", err)
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -92,19 +105,13 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 }
 
 func (h *HeaderReplacementsHandler) DeleteHeaderReplacement(c echo.Context) error {
-	configID, configIDErr := uuid.Parse(c.Param("configId"))
-	if configIDErr != nil {
-		log.Fatalf("Invalid config id: %e", configIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
+	header, ok := c.Get("header").(*models.HeaderReplacement)
+	if !ok {
+		log.Println("Missing header replacement instance in the config")
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	headerID, headerIDErr := uuid.Parse(c.Param("headerId"))
-	if headerIDErr != nil {
-		log.Fatalf("Invalid header id: %e", headerIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid header id")
-	}
-
-	if deleteErr := h.db.DeleteHeaderReplacement(configID, headerID); deleteErr != nil {
+	if deleteErr := h.db.DeleteHeaderReplacement(header.ID); deleteErr != nil {
 		log.Fatalf("Failed to delete header: %e", deleteErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
@@ -113,15 +120,9 @@ func (h *HeaderReplacementsHandler) DeleteHeaderReplacement(c echo.Context) erro
 }
 
 func (h *HeaderReplacementsHandler) GetHeaderReplacementValue(c echo.Context) error {
-	headerID, headerIDErr := uuid.Parse(c.Param("headerId"))
-	if headerIDErr != nil {
-		log.Fatalf("Invalid header id: %e", headerIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid header id")
-	}
-
-	header, err := h.db.GetHeaderReplacement(headerID)
-	if err != nil {
-		log.Fatalf("failed to fetch header replacement data: %e", err)
+	header, ok := c.Get("header").(*models.HeaderReplacement)
+	if !ok {
+		log.Println("Missing header replacement instance in the context")
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
