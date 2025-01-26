@@ -243,11 +243,11 @@ func (s *DatabaseHandler) CreateConfig(projectID uuid.UUID, name string,
 	return &config, nil
 }
 
-func (s *DatabaseHandler) DeleteConfig(projectID uuid.UUID, configID uuid.UUID) error {
+func (s *DatabaseHandler) DeleteConfig(configID uuid.UUID) error {
 	query := `
-		DELETE FROM configs WHERE id=$1 AND project_id = $2
+		DELETE FROM configs WHERE id=$1
 	`
-	_, err := s.DB.Exec(query, configID, projectID)
+	_, err := s.DB.Exec(query, configID)
 	if err != nil {
 		return fmt.Errorf("failed to delete config: %v", err)
 	}

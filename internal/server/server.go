@@ -18,6 +18,7 @@ type Server struct {
 
 	db              *database.DatabaseHandler
 	projectsHandler *handlers.ProjectHandler
+	configHandler   *handlers.ConfigHandler
 	headersHandler  *handlers.HeaderReplacementsHandler
 	loginHandler    *handlers.LoginHandler
 }

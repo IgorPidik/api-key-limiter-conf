@@ -41,11 +41,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	projectActionsGroup := projectsGroup.Group("/:id", s.ProjectBelongsToLoggedUser)
 	projectActionsGroup.DELETE("", s.projectsHandler.DeleteProject)
-	projectActionsGroup.POST("/configs", s.projectsHandler.CreateConfig)
+	projectActionsGroup.POST("/configs", s.configHandler.CreateConfig)
 
 	configsGroup := projectActionsGroup.Group("/configs/:configId", s.ConfigBelongToProject)
-	configsGroup.DELETE("", s.projectsHandler.DeleteConfig)
-	configsGroup.GET("/connection", s.projectsHandler.GetConfigConnection)
+	configsGroup.DELETE("", s.configHandler.DeleteConfig)
+	configsGroup.GET("/connection", s.configHandler.GetConfigConnection)
 
 	configsGroup.POST("/headers", s.headersHandler.CreateHeaderReplacement)
 

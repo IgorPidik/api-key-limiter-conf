@@ -79,7 +79,7 @@ func (h *HeaderReplacementsHandler) CreateHeaderReplacement(c echo.Context) erro
 			log.Fatalf("Error rendering created header replacement: %e", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-
+		c.Response().WriteHeader(http.StatusBadRequest)
 		return nil
 	}
 

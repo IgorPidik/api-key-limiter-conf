@@ -6,27 +6,16 @@ import (
 	"configuration-management/internal/models"
 	"configuration-management/internal/utils"
 	"configuration-management/web/projects_components"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type CreateProjectForm struct {
 	Name string `form:"project-name" validate:"required"`
-}
-
-type CreateConfigForm struct {
-	Name             string `form:"name" validate:"required"`
-	HeaderName       string `form:"header-name" validate:"required"`
-	HeaderValue      string `form:"header-value" validate:"required"`
-	NumberOfRequests int    `form:"num-of-requests" validate:"required"`
-	Per              string `form:"requests-per" validate:"required,oneof=second minute hour day"`
 }
 
 type ProjectHandler struct {
@@ -63,20 +52,14 @@ func (p *ProjectHandler) ListProjects(c echo.Context) error {
 	return nil
 }
 
-func (p *ProjectHandler) CreateProject(c echo.Context) error {
-	user, ok := c.Get("user").(*models.User)
-	if !ok {
-		log.Println("Missing user")
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
+func (p *ProjectHandler) processCreateForm(c echo.Context) (*CreateProjectForm, forms.FormErrors, error) {
 	if c.Request().ParseForm() != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest)
 	}
 	var createProjectForm CreateProjectForm
 	if err := p.decoder.Decode(&createProjectForm, c.Request().Form); err != nil {
 		log.Fatalf("Error decoding CreateProjectForm: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return nil, nil, echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
 	if validationErr := p.validate.Struct(createProjectForm); validationErr != nil {
@@ -85,15 +68,33 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 			errors[err.Field()] = err.Tag()
 		}
 
+		return nil, errors, nil
+	}
+	return &createProjectForm, nil, nil
+}
+
+func (p *ProjectHandler) CreateProject(c echo.Context) error {
+	user, ok := c.Get("user").(*models.User)
+	if !ok {
+		log.Println("Missing user")
+		return echo.NewHTTPError(http.StatusInternalServerError)
+	}
+
+	createProjectForm, formErrors, processingErr := p.processCreateForm(c)
+	if processingErr != nil {
+		return processingErr
+	}
+	if formErrors != nil {
 		c.Response().Header().Set("HX-Reswap", "outerHTML")
 		c.Response().Header().Set("HX-Retarget", "#create-project-form")
-		component := projects_components.CreateProject(errors)
+		component := projects_components.CreateProject(formErrors)
 		if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 			log.Fatalf("Error rendering created project: %e", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		c.Response().WriteHeader(http.StatusBadRequest)
 		return nil
+
 	}
 
 	accessKey, err := utils.GenerateEncryptedToken(32)
@@ -118,127 +119,14 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 }
 
 func (p *ProjectHandler) DeleteProject(c echo.Context) error {
-	projectId, idErr := uuid.Parse(c.Param("id"))
-	if idErr != nil {
-		log.Fatalf("Invalid project id: %e", idErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
-	}
-
-	if deleteErr := p.db.DeleteProject(projectId); deleteErr != nil {
-		log.Fatalf("Failed to delete project: %e", deleteErr)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	return nil
-}
-
-func (p *ProjectHandler) CreateConfig(c echo.Context) error {
-	projectID, idErr := uuid.Parse(c.Param("id"))
-	if idErr != nil {
-		log.Fatalf("Invalid project id: %e", idErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
-	}
-
-	if c.Request().ParseForm() != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
-	}
-	var createConfigForm CreateConfigForm
-	if err := p.decoder.Decode(&createConfigForm, c.Request().Form); err != nil {
-		log.Fatalf("Error decoding CreateConfigForm: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	if validationErr := p.validate.Struct(createConfigForm); validationErr != nil {
-		errors := make(forms.FormErrors)
-		for _, err := range validationErr.(validator.ValidationErrors) {
-			errors[err.Field()] = err.Tag()
-		}
-
-		c.Response().Header().Set("HX-Reswap", "outerHTML")
-		c.Response().Header().Set("HX-Retarget", "#"+projects_components.GetCreateConfigFormID(projectID))
-		component := projects_components.CreateConfigForm(projectID, errors)
-		if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
-			log.Fatalf("Error rendering created config: %e", err)
-			return echo.NewHTTPError(http.StatusInternalServerError)
-		}
-		c.Response().WriteHeader(http.StatusBadRequest)
-		return nil
-	}
-
-	config, configErr := p.db.CreateConfig(projectID, createConfigForm.Name, createConfigForm.NumberOfRequests, createConfigForm.Per)
-	if configErr != nil {
-		log.Fatalf("Failed to create config: %e", configErr)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	encryptedValue, encryptErr := utils.EncryptData(createConfigForm.HeaderValue)
-	if encryptErr != nil {
-		log.Fatalf("Failed to encrypt header value: %e", encryptErr)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	headeReplacement, headerErr := p.db.CreateHeaderReplacement(config.ID, createConfigForm.HeaderName, encryptedValue)
-	if headerErr != nil {
-		log.Fatalf("Failed to create header replacement: %e", headerErr)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-	config.HeaderReplacements = append(config.HeaderReplacements, *headeReplacement)
-
-	component := projects_components.ConfigDetails(*config)
-	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
-		log.Fatalf("Error rendering created config: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	return nil
-}
-
-func (p *ProjectHandler) DeleteConfig(c echo.Context) error {
-	projectID, projectIDErr := uuid.Parse(c.Param("id"))
-	if projectIDErr != nil {
-		log.Fatalf("Invalid project id: %e", projectIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
-	}
-
-	configID, configIDErr := uuid.Parse(c.Param("configId"))
-	if configIDErr != nil {
-		log.Fatalf("Invalid config id: %e", configIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
-	}
-
-	if deleteErr := p.db.DeleteConfig(projectID, configID); deleteErr != nil {
-		log.Fatalf("Failed to delete config: %e", deleteErr)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
-
-	return nil
-}
-
-func (p *ProjectHandler) GetConfigConnection(c echo.Context) error {
-	configID, configIDErr := uuid.Parse(c.Param("configId"))
-	if configIDErr != nil {
-		log.Fatalf("Invalid config id: %e", configIDErr)
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
-	}
-
 	project, ok := c.Get("project").(*models.Project)
 	if !ok {
-		log.Println("Missing project")
+		log.Println("Missing project instance in the context")
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	accessToken, err := utils.DecryptData(project.AccessKey)
-	if err != nil {
-		log.Fatalf("Failed to decrypt access token: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-
-	}
-
-	host := os.Getenv("HOST_NAME")
-	connectionString := fmt.Sprintf("https://%s:%s@%s.com", configID, accessToken, host)
-	component := projects_components.ConfigConnectionString(connectionString)
-	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
-		log.Fatalf("Error rendering connection string: %e", err)
+	if deleteErr := p.db.DeleteProject(project.ID); deleteErr != nil {
+		log.Fatalf("Failed to delete project: %e", deleteErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
