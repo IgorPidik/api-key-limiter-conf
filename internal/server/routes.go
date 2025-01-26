@@ -41,7 +41,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	projectActionsGroup := projectsGroup.Group("/:id", s.ProjectBelongsToLoggedUser)
 	projectActionsGroup.DELETE("", s.projectsHandler.DeleteProject)
-
 	projectActionsGroup.POST("/configs", s.projectsHandler.CreateConfig)
 
 	configsGroup := projectActionsGroup.Group("/configs/:configId", s.ConfigBelongToProject)
@@ -49,8 +48,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	configsGroup.GET("/connection", s.projectsHandler.GetConfigConnection)
 
 	configsGroup.POST("/headers", s.headersHandler.CreateHeaderReplacement)
-	configsGroup.DELETE("/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
-	configsGroup.GET("/headers/:headerId/value", s.headersHandler.GetHeaderReplacementValue)
+
+	headersGroup := configsGroup.Group("/headers/:headerId", s.HeaderBelongsToConfig)
+	headersGroup.DELETE("", s.headersHandler.DeleteHeaderReplacement)
+	headersGroup.GET("/value", s.headersHandler.GetHeaderReplacementValue)
 
 	return e
 }

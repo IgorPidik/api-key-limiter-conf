@@ -19,7 +19,7 @@ func (s *Server) ConfigBelongToProject(next echo.HandlerFunc) echo.HandlerFunc {
 		configID, idErr := uuid.Parse(c.Param("configId"))
 		if idErr != nil {
 			log.Fatalf("Invalid config id: %e", idErr)
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid project id")
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid config id")
 		}
 
 		config, err := s.db.GetConfig(configID)
