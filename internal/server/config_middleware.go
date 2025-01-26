@@ -16,6 +16,7 @@ func (s *Server) ConfigBelongToProject(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println("Missing project")
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
+
 		configID, idErr := uuid.Parse(c.Param("configId"))
 		if idErr != nil {
 			log.Fatalf("Invalid config id: %e", idErr)
@@ -26,7 +27,6 @@ func (s *Server) ConfigBelongToProject(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			log.Printf("failed to get config: %v\n", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
-
 		}
 
 		if config.ProjectID != project.ID {

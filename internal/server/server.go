@@ -31,6 +31,7 @@ func NewServer() *http.Server {
 		projectsHandler: handlers.NewProjectHandler(db),
 		headersHandler:  handlers.NewHeaderReplacementsHandler(db),
 		loginHandler:    handlers.NewLoginHandler(db),
+		configHandler:   handlers.NewConfigHandler(db),
 		db:              db,
 	}
 
