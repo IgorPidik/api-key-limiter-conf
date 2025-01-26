@@ -43,14 +43,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	projectActionsGroup.DELETE("", s.projectsHandler.DeleteProject)
 
 	projectActionsGroup.POST("/configs", s.projectsHandler.CreateConfig)
-	projectActionsGroup.DELETE("/configs/:configId", s.projectsHandler.DeleteConfig)
 
-	projectActionsGroup.GET("/configs/:configId/connection", s.projectsHandler.GetConfigConnection)
+	configsGroup := projectActionsGroup.Group("/configs/:configId", s.ConfigBelongToProject)
+	configsGroup.DELETE("", s.projectsHandler.DeleteConfig)
+	configsGroup.GET("/connection", s.projectsHandler.GetConfigConnection)
 
-	projectActionsGroup.POST("/configs/:configId/headers", s.headersHandler.CreateHeaderReplacement)
-	projectActionsGroup.DELETE("/configs/:configId/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
-
-	projectActionsGroup.GET("/configs/:configId/headers/:headerId/value", s.headersHandler.GetHeaderReplacementValue)
+	configsGroup.POST("/headers", s.headersHandler.CreateHeaderReplacement)
+	configsGroup.DELETE("/headers/:headerId", s.headersHandler.DeleteHeaderReplacement)
+	configsGroup.GET("/headers/:headerId/value", s.headersHandler.GetHeaderReplacementValue)
 
 	return e
 }

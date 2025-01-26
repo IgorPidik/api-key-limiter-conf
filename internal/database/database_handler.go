@@ -174,6 +174,23 @@ func (s *DatabaseHandler) DeleteProject(projectID uuid.UUID) error {
 	return nil
 }
 
+func (s *DatabaseHandler) GetConfig(configID uuid.UUID) (*models.Config, error) {
+	query := `
+		SELECT id, project_id, name, limit_requests_count, limit_duration
+		FROM configs
+		WHERE id = $1
+	`
+	var config models.Config
+	if err := s.DB.QueryRow(query, configID).Scan(
+		&config.ID, &config.ProjectID, &config.Name,
+		&config.LimitNumberOfRequests, &config.LimitPer,
+	); err != nil {
+		return nil, fmt.Errorf("failed to scan config: %v", err)
+	}
+
+	return &config, nil
+}
+
 func (s *DatabaseHandler) ListConfigs(projectID uuid.UUID) ([]models.Config, error) {
 	query := `
 		SELECT id, project_id, name, limit_requests_count, limit_duration
