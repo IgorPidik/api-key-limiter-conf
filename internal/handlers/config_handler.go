@@ -108,7 +108,7 @@ func (ch *ConfigHandler) CreateConfig(c echo.Context) error {
 }
 
 func (ch *ConfigHandler) DeleteConfig(c echo.Context) error {
-	config, ok := c.Get("config").(*models.Project)
+	config, ok := c.Get("config").(*models.Config)
 	if !ok {
 		log.Println("Missing config instance in the context")
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -123,7 +123,7 @@ func (ch *ConfigHandler) DeleteConfig(c echo.Context) error {
 }
 
 func (ch *ConfigHandler) GetConfigConnection(c echo.Context) error {
-	config, ok := c.Get("config").(*models.Project)
+	config, ok := c.Get("config").(*models.Config)
 	if !ok {
 		log.Println("Missing config instance in the context")
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -143,6 +143,10 @@ func (ch *ConfigHandler) GetConfigConnection(c echo.Context) error {
 	}
 
 	host := os.Getenv("HOST_NAME")
+	if host == "" {
+		host = "localhost"
+	}
+
 	connectionString := fmt.Sprintf("https://%s:%s:%s@%s.com", config.ID, project.ID, accessToken, host)
 	component := projects_components.ConfigConnectionString(connectionString)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
