@@ -9,7 +9,7 @@ import (
 
 func (s *DatabaseHandler) ListProjects(userID uuid.UUID) ([]models.Project, error) {
 	query := `
-		SELECT id, name, access_key
+		SELECT id, name, description, access_key
 		FROM projects
 		WHERE user_id = $1
 		ORDER BY timestamp DESC
@@ -24,7 +24,7 @@ func (s *DatabaseHandler) ListProjects(userID uuid.UUID) ([]models.Project, erro
 	var projects []models.Project
 	for rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ID, &project.Name, &project.AccessKey); err != nil {
+		if err := rows.Scan(&project.ID, &project.Name, &project.Description, &project.AccessKey); err != nil {
 			return nil, fmt.Errorf("failed to scan project row: %v", err)
 		}
 		// list configs
@@ -42,29 +42,31 @@ func (s *DatabaseHandler) ListProjects(userID uuid.UUID) ([]models.Project, erro
 
 func (s *DatabaseHandler) GetProject(projectID uuid.UUID) (*models.Project, error) {
 	query := `
-		SELECT id, name, access_key, user_id
+		SELECT id, name, description, access_key, user_id
 		FROM projects
 		WHERE id = $1
 	`
 
 	var project models.Project
 	if err := s.DB.QueryRow(query, projectID).Scan(&project.ID, &project.Name,
-		&project.AccessKey, &project.UserID); err != nil {
+		&project.Description, &project.AccessKey, &project.UserID); err != nil {
 		return nil, fmt.Errorf("failed to query project: %v", err)
 	}
 
 	return &project, nil
 }
 
-func (s *DatabaseHandler) CreateProject(name string, accessKey string, userID uuid.UUID) (*models.Project, error) {
+func (s *DatabaseHandler) CreateProject(name string, description string, accessKey string, userID uuid.UUID) (*models.Project, error) {
 	query := `
-		INSERT into projects (name, access_key, user_id)
-		VALUES ($1, $2, $3)
-		RETURNING id, name, access_key 
+		INSERT into projects (name, description, access_key, user_id)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, name, description, access_key 
 	`
 
 	var project models.Project
-	err := s.DB.QueryRow(query, name, accessKey, userID).Scan(&project.ID, &project.Name, &project.AccessKey)
+	err := s.DB.QueryRow(query, name, description, accessKey, userID).Scan(
+		&project.ID, &project.Name, &project.Description, &project.AccessKey,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %v", err)
 	}

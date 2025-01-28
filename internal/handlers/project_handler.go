@@ -15,7 +15,8 @@ import (
 )
 
 type CreateProjectForm struct {
-	Name string `form:"project-name" validate:"required"`
+	Name        string `form:"name" validate:"required"`
+	Description string `form:"name"`
 }
 
 type ProjectHandler struct {
@@ -103,7 +104,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	project, projectErr := p.db.CreateProject(createProjectForm.Name, accessKey, user.ID)
+	project, projectErr := p.db.CreateProject(createProjectForm.Name, createProjectForm.Description, accessKey, user.ID)
 	if projectErr != nil {
 		log.Fatalf("Error creating project: %e", projectErr)
 		return echo.NewHTTPError(http.StatusInternalServerError)
