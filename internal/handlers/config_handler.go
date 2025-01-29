@@ -135,19 +135,8 @@ func (ch *ConfigHandler) GetConfigConnection(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	accessToken, err := utils.DecryptData(project.AccessKey)
-	if err != nil {
-		log.Fatalf("Failed to decrypt access token: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-
-	}
-
-	host := os.Getenv("HOST_NAME")
-	if host == "" {
-		host = "localhost"
-	}
-
-	connectionString := fmt.Sprintf("https://%s:%s:%s@%s.com", config.ID, project.ID, accessToken, host)
+	host := os.Getenv("PROXY_HOST")
+	connectionString := fmt.Sprintf("https://%s:%s:%s@%s", config.ID, project.ID, project.AccessKey, host)
 	component := projects_components.ConfigConnectionString(connectionString)
 	if err := component.Render(c.Request().Context(), c.Response().Writer); err != nil {
 		log.Fatalf("Error rendering connection string: %e", err)

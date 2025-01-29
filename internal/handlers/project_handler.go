@@ -98,11 +98,7 @@ func (p *ProjectHandler) CreateProject(c echo.Context) error {
 
 	}
 
-	accessKey, err := utils.GenerateEncryptedToken(32)
-	if err != nil {
-		log.Fatalf("Error creating encrypted access key: %e", err)
-		return echo.NewHTTPError(http.StatusInternalServerError)
-	}
+	accessKey := utils.GenerateToken(32)
 
 	project, projectErr := p.db.CreateProject(createProjectForm.Name, createProjectForm.Description, accessKey, user.ID)
 	if projectErr != nil {

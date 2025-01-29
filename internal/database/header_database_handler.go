@@ -15,7 +15,7 @@ func (s *DatabaseHandler) ListHeaderReplacements(configID uuid.UUID) ([]models.H
 	`
 	rows, err := s.DB.Query(query, configID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query projects: %v", err)
+		return nil, fmt.Errorf("failed to query header replacements: %v", err)
 	}
 	defer rows.Close()
 

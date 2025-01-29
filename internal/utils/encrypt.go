@@ -16,11 +16,6 @@ func GenerateToken(length int) string {
 	return hex.EncodeToString(b)
 }
 
-func GenerateEncryptedToken(length int) (string, error) {
-	token := GenerateToken(length)
-	return EncryptData(token)
-}
-
 func DecryptData(data string) (string, error) {
 	secretKeyHex := os.Getenv("SECRET_KEY")
 	secretKey, decodeErr := hex.DecodeString(secretKeyHex)
