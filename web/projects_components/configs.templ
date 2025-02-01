@@ -25,10 +25,8 @@ templ ConfigDetails(config models.Config) {
 			<div class="grid grid-cols-2 gap-1 items-center">
 				<span>Config ID</span>
 				<span class="text-right">{ config.ID.String() }</span>
-				<span>Limit number of requests</span>
-				<span class="text-right">{ strconv.Itoa(config.LimitNumberOfRequests) }</span>
-				<span>Limit per</span>
-				<span class="text-right">{ config.LimitPer }</span>
+				<span>Limit requests</span>
+				<span class="text-right">{ strconv.Itoa(config.LimitNumberOfRequests) } / { config.LimitPer }</span>
 				<span>Proxy URL</span>
 				<div class="text-right">
 					<a
@@ -118,6 +116,10 @@ templ CreateConfigForm(projectID uuid.UUID, errors forms.FormErrors) {
 				<option value="minute">Minute</option>
 				<option value="hour">Hour</option>
 				<option value="day">Day</option>
+				<option value="week">Week</option>
+				<option value="month">Month</option>
+				<option value="year">Year</option>
+				<option value="forever">Forever</option>
 			</select>
 			if err, ok := errors["Per"]; ok {
 				<small class="text-red-400">{ err }</small>

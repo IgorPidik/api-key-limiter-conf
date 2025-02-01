@@ -1,4 +1,4 @@
-CREATE TYPE LIMIT_DURATION AS ENUM ('second', 'minute', 'hour', 'day');
+CREATE TYPE LIMIT_DURATION AS ENUM ('second', 'minute', 'hour', 'day', 'week', 'month', 'year', 'forever');
 
 CREATE TABLE configs (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,

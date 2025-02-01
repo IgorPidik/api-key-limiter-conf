@@ -21,7 +21,7 @@ type CreateConfigForm struct {
 	HeaderName       string `form:"header-name" validate:"required"`
 	HeaderValue      string `form:"header-value" validate:"required"`
 	NumberOfRequests int    `form:"num-of-requests" validate:"required"`
-	Per              string `form:"requests-per" validate:"required,oneof=second minute hour day"`
+	Per              string `form:"requests-per" validate:"required,oneof=second minute hour day week month year forever"`
 }
 
 type ConfigHandler struct {
